@@ -1,11 +1,4 @@
-// passwordReset.ts
-import { sendPasswordResetEmail } from "firebase/auth";
-import { auth } from "@/config/firebase.config";
-
-export const sendPasswordReset = async (email: string) => {
-  try {
-    await sendPasswordResetEmail(auth, email);
-  } catch (error) {
-    console.error("Erro ao redefinir a senha:", error);
-  }
-};
+export async function sendPasswordReset(email: string) {
+  const response = await fetch("/api/auth-tokens/reset-request", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) });
+  if (!response.ok) throw new Error("Falha ao solicitar redefinição");
+}

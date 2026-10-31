@@ -1,90 +1,44 @@
 # ControleCC
 
-Uma aplicação web para gerenciamento de usuários e arquivos, construída com Next.js, Firebase e Tailwind CSS.
+Aplicação Next.js para controle de atividades e certificados, executada em infraestrutura própria com PostgreSQL, MinIO, Auth.js, SMTP e Caddy. O navegador nunca acessa o banco nem recebe credenciais do armazenamento.
 
-## Funcionalidades
+## Desenvolvimento com Docker
 
-- Autenticação e autorização de usuários (admin/usuário)
-- Gerenciamento de usuários (CRUD)
-- Upload e gerenciamento de arquivos
-- Dashboard para acompanhamento de progresso
-- Interface responsiva com Tailwind CSS
+1. Copie `.env.example` para `.env` e troque todas as senhas e segredos.
+2. Para desenvolvimento local, mantenha `APP_URL=http://127.0.0.1`, `NEXTAUTH_URL=http://127.0.0.1`, `S3_PUBLIC_ENDPOINT=http://127.0.0.1:9000`, `CADDY_APP_ADDRESS=http://127.0.0.1` e `CADDY_STORAGE_ADDRESS=http://127.0.0.1:9000`. Em produção, configure os dois endereços do Caddy com os domínios HTTPS reais.
+3. Execute `docker compose up --build`.
+4. Abra `http://localhost`. O Mailpit está na rede Docker; exponha sua interface apenas no perfil de desenvolvimento se precisar inspecionar e-mails.
 
-## Tecnologias Utilizadas
+O schema inicial é aplicado ao criar o volume do PostgreSQL por meio de `db/migrations/001_initial.sql`. Em uma base existente, execute novas migrations explicitamente antes de publicar a nova aplicação.
 
-- [Next.js](https://nextjs.org/)
-- [React](https://react.dev/)
-- [Firebase (Firestore, Auth)](https://firebase.google.com/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [TypeScript](https://www.typescriptlang.org/)
+## Primeiro administrador
 
-## Primeiros Passos
+Cadastre e confirme uma conta e, em seguida, promova-a diretamente no PostgreSQL:
 
-### Pré-requisitos
-
-- Node.js (v16+)
-- npm
-
-### Instalação
-
-1. Clone o repositório:
-   ```bash
-   git clone https://github.com/seuusuario/controlecc.git
-   cd controlecc
-   ```
-
-2. Instale as dependências:
-   ```bashr
-   npm install
-   ```
-
-3. Configure o Firebase:
-   - Copie sua configuração do Firebase para `src/config/firebase.config.ts`.
-
-4. Inicie o servidor de desenvolvimento:
-   ```bash
-   npm run dev
-   ```
-
-5. Abra [http://localhost:3000](http://localhost:3000) no seu navegador.
-
-## Estrutura do Projeto
-
-```
-controlecc/
-  ├── src/
-  │   ├── app/                # Diretório principal do Next.js (páginas, layouts)
-  │   ├── components/         # Componentes reutilizáveis React
-  │   ├── config/             # Arquivos de configuração (ex: Firebase)
-  │   ├── hooks/              # Hooks personalizados React
-  │   ├── lib/                # Funções utilitárias e bibliotecas
-  │   ├── services/           # Camada de serviços (API, integração com Firebase)
-  │   └── types/              # Definições de tipos TypeScript
-  ├── public/                 # Arquivos estáticos
-  ├── package.json
-  └── README.md
+```sql
+UPDATE users SET role = 'admin' WHERE email = 'administrador@instituicao.br';
 ```
 
-## Uso
+## Arquivos
 
-- Cadastre-se ou faça login como usuário.
-- Administradores podem gerenciar usuários e aprovar arquivos.
-- Usuários podem enviar arquivos e acompanhar seu progresso.
+O bucket `certificados` é privado. Uploads e downloads usam URLs pré-assinadas com validade de cinco minutos pelo host `storage.<domínio>`, que é encaminhado ao MinIO pelo Caddy. PDFs são limitados a 5 MB; o registro da atividade preserva o hash SHA-256 único.
 
-## Contribuindo
+## E-mail
 
-Contribuições são bem-vindas! Para mudanças maiores, por favor abra uma issue primeiro para discutir o que você gostaria de modificar.
+Em desenvolvimento, o SMTP padrão é `mailpit:1025`. Em produção, configure `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD` e `SMTP_FROM` com o servidor institucional.
 
-1. Faça um fork do repositório
-2. Crie uma branch para sua feature (`git checkout -b feature/SuaFeature`)
-3. Faça commit das suas alterações (`git commit -m 'Adiciona nova feature'`)
-4. Faça push para a branch (`git push origin feature/SuaFeature`)
-5. Abra um pull request
+## Backup
 
-## Licença
+O Compose mantém dumps do PostgreSQL em `postgres_backups` e um espelho diário dos certificados em `minio_backups`. Esses dois volumes precisam ser replicados para armazenamento externo; volumes Docker isoladamente não são backup. Teste restaurações regularmente.
 
-[MIT](LICENSE)
+## Migração de instalações antigas
 
-## Contato
+Exporte usuários, cursos, projetos, tipos e atividades da instalação anterior, normalize os IDs para UUID e importe-os em uma transação, respeitando a ordem das chaves estrangeiras. Copie os PDFs para `certificados/{userId}/{activityId}.pdf` e grave essa chave em `activities.file_key`. Como hashes de senha externos não são importados, crie tokens de redefinição para esses usuários. Valide contagens, hashes e uma amostra de downloads antes da troca de DNS.
 
-Para dúvidas ou suporte, entre em contato pelo e-mail: [seu-email@exemplo.com]
+## Verificação
+
+```bash
+npm install
+npx tsc --noEmit
+npm run build
+```

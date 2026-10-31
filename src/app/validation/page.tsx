@@ -4,8 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
-import { collection, query, getDocs, doc, setDoc } from "firebase/firestore";
-import { db, storage } from "@/config/firebase.config";
+import { collection, query, getDocs, doc, setDoc, database as db, storage } from "@/lib/api-client";
 import { FileDownIcon, FilterIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ref, getDownloadURL } from "firebase/storage";
+import { ref, getDownloadURL } from "@/lib/api-client";
 import { PDFDocument } from "pdf-lib";
 import { LoadingSpinner } from "@/components/ui/loader";
 import withAuthorization from "@/components/with-authorization";
@@ -230,9 +229,9 @@ const ValidationPage = () => {
 
     if (filters.createdAt) {
       filteredList = filteredList.filter((item: any) => {
-        const firebaseDate = new Date(item.createdAt.seconds * 1000);
-        const firebaseDateFormatted = firebaseDate.toISOString().split("T")[0];
-        return firebaseDateFormatted === filters.createdAt;
+        const createdDate = new Date(item.createdAt.seconds * 1000);
+        const createdDateFormatted = createdDate.toISOString().split("T")[0];
+        return createdDateFormatted === filters.createdAt;
       });
     }
 

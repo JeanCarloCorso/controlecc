@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import ResponsiveMenu from '@/components/responsive-menu';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { collection, query, getDocs, addDoc, serverTimestamp, doc, setDoc, deleteDoc, where } from 'firebase/firestore';
-import { db } from '@/config/firebase.config';
+import { collection, query, getDocs, addDoc, serverTimestamp, doc, setDoc, deleteDoc, where } from '@/lib/api-client';
+import { database as db } from '@/lib/api-client';
 import {
   Table,
   TableBody,

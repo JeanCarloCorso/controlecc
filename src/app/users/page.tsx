@@ -11,8 +11,8 @@ import {
   doc,
   setDoc,
   deleteDoc,
-} from "firebase/firestore";
-import { db } from "@/config/firebase.config";
+} from "@/lib/api-client";
+import { database as db } from "@/lib/api-client";
 import {
   Table,
   TableBody,

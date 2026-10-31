@@ -18,22 +18,35 @@
 
 # misc
 .DS_Store
+Thumbs.db
 *.pem
+*.log
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
-.env*.local
+# environment files (keep the documented template)
+.env
+.env.*
+!.env.example
 
 # vercel
 .vercel
 
-# env
-.env
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# local Docker overrides and runtime data
+docker-compose.override.yml
+docker-compose.local.yml
+.docker/
+backups/

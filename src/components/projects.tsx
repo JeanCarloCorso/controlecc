@@ -31,8 +31,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from './ui/button';
 import { Edit2Icon, Plus, Trash } from 'lucide-react';
 import { LoadingSpinner } from './ui/loader';
-import { collection, query, getDocs, addDoc, serverTimestamp, doc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
-import { db } from '@/config/firebase.config';
+import { collection, query, getDocs, addDoc, serverTimestamp, doc, setDoc, deleteDoc } from "@/lib/api-client";
+import { database as db } from '@/lib/api-client';
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -51,9 +51,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-
-import { generateId } from '@/lib/utils';
-
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -191,27 +188,24 @@ export default function Projects() {
       let lastProjects: any = selectedCourse?.projects;
       let data: any = selectedCourse;
 
-      projectData.uid = generateId()
-
       lastProjects.push(projectData);
 
       data.projects = lastProjects;
 
       const docRef = doc(db, "courses", selectedCourse.id)
 
-      setDoc(docRef, data, {
+      await setDoc(docRef, data, {
         merge: true
-      }).then(() => {
-        toast({
-          title: "Projeto adicionado com sucesso!",
-        })
-
-        setLoading(false);
-        setDrawerVisibleForm(false);
-        form.clearErrors();
-        form.reset();
-
       })
+
+      toast({
+        title: "Projeto adicionado com sucesso!",
+      })
+
+      setLoading(false);
+      setDrawerVisibleForm(false);
+      form.clearErrors();
+      form.reset();
 
       
       setSelectedCourse(data)

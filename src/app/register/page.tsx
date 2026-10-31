@@ -40,13 +40,13 @@ const formSchema = z
       message: "Matrícula é obrigatória",
     }),
     email: z.string().email({ message: "Email inválido" }),
-    password: z.string().min(6, {
-      message: "A senha precisa ter no mínimo 6 caracteres",
+    password: z.string().min(8, {
+      message: "A senha precisa ter no mínimo 8 caracteres",
     }),
-    confirmPassword: z.string().min(6, {
+    confirmPassword: z.string().min(8, {
       message: "Confirme sua senha",
     }),
-    recaptchaToken: z.string().min(1, { message: "A validação reCAPTCHA é obrigatória" }),
+    recaptchaToken: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     path: ["confirmPassword"],
@@ -54,6 +54,7 @@ const formSchema = z
   });
 
 export default function RegisterPage() {
+  const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE;
   const [loading, setLoading] = useState(false);
   const [recaptchaValue, setRecaptchaValue] = useState<string | null>(null);
   const router = useRouter();
@@ -78,7 +79,7 @@ export default function RegisterPage() {
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!recaptchaValue) {
+    if (recaptchaSiteKey && !recaptchaValue) {
       toast({
         variant: "destructive",
         title: "Validação reCAPTCHA é obrigatória.",
@@ -93,7 +94,7 @@ export default function RegisterPage() {
         registrationNumber: values.registrationNumber,
       };
 
-      const user = await registerUser(values.email, values.password, additionalData);
+      const user = await registerUser(values.email, values.password, additionalData, values.recaptchaToken);
       
       if (user) {
         toast({
@@ -206,13 +207,14 @@ export default function RegisterPage() {
                   </FormItem>
                 )}
               />
-              {/* reCAPTCHA */}
-              <div className="flex justify-center w-full">
-                <ReCAPTCHA
-                  sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE}
-                  onChange={handleRecaptchaChange}
-                />
-              </div>
+              {recaptchaSiteKey && (
+                <div className="flex justify-center w-full">
+                  <ReCAPTCHA
+                    sitekey={recaptchaSiteKey}
+                    onChange={handleRecaptchaChange}
+                  />
+                </div>
+              )}
 
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? <LoadingSpinner className="text-black" /> : "Registrar"}

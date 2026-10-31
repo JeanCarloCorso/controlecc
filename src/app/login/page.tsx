@@ -64,7 +64,7 @@ export default function LoginPage() {
       const result = await signIn('credentials', {
         redirect: false,
         email: values.email,
-        password: values.password, // Utilize o token do Firebase
+        password: values.password,
       });
 
       if (result?.error) {

@@ -6,8 +6,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import withAuthorization from "@/components/with-authorization";
-import { collection, query, getDocs, where } from "firebase/firestore";
-import { db } from "@/config/firebase.config";
+import { collection, query, getDocs, where, database as db } from "@/lib/api-client";
 import {
   Card,
   CardContent,

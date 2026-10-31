@@ -1,0 +1,120 @@
+services:
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_RECAPTCHA_SITE: ${NEXT_PUBLIC_RECAPTCHA_SITE:?configure NEXT_PUBLIC_RECAPTCHA_SITE no .env}
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      postgres: { condition: service_healthy }
+      minio-init: { condition: service_completed_successfully }
+    networks: [internal, proxy]
+
+  postgres:
+    image: postgres:16.4-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?configure POSTGRES_DB no .env}
+      POSTGRES_USER: ${POSTGRES_USER:?configure POSTGRES_USER no .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?configure POSTGRES_PASSWORD no .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/migrations:/migrations:ro
+      - ./db/init/00-run-migrations.sh:/docker-entrypoint-initdb.d/00-run-migrations.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [internal, db-access]
+
+  minio:
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:?configure S3_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:?configure S3_SECRET_KEY}
+    volumes: [minio_data:/data]
+    networks: [internal]
+
+  minio-init:
+    image: pgsty/mc:RELEASE.2026-09-16T00-00-00Z
+    depends_on: [minio]
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["until mc alias set local $$S3_ENDPOINT $$S3_ACCESS_KEY $$S3_SECRET_KEY; do sleep 2; done; mc mb --ignore-existing local/$$S3_BUCKET; mc anonymous set none local/$$S3_BUCKET"]
+    environment:
+      S3_ENDPOINT: ${S3_ENDPOINT:?configure S3_ENDPOINT no .env}
+      S3_BUCKET: ${S3_BUCKET:?configure S3_BUCKET no .env}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?configure S3_ACCESS_KEY no .env}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?configure S3_SECRET_KEY no .env}
+    networks: [internal]
+
+  mailpit:
+    image: axllent/mailpit:v1.20.3
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8025:8025"
+    networks: [internal, proxy]
+
+  reverse-proxy:
+    image: caddy:2.8.4-alpine
+    restart: unless-stopped
+    depends_on: [app]
+    ports:
+      - "${APP_HTTP_PORT:?configure APP_HTTP_PORT no .env}:80"
+      - "${APP_HTTPS_PORT:?configure APP_HTTPS_PORT no .env}:443"
+      - "${STORAGE_HTTP_PORT:?configure STORAGE_HTTP_PORT no .env}:9000"
+    environment:
+      CADDY_APP_ADDRESS: ${CADDY_APP_ADDRESS:?configure CADDY_APP_ADDRESS no .env}
+      CADDY_STORAGE_ADDRESS: ${CADDY_STORAGE_ADDRESS:?configure CADDY_STORAGE_ADDRESS no .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [proxy, internal]
+
+  backup:
+    image: prodrigestivill/postgres-backup-local:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:?configure POSTGRES_DB no .env}
+      POSTGRES_USER: ${POSTGRES_USER:?configure POSTGRES_USER no .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?configure POSTGRES_PASSWORD no .env}
+      SCHEDULE: ${POSTGRES_BACKUP_SCHEDULE:?configure POSTGRES_BACKUP_SCHEDULE no .env}
+      BACKUP_KEEP_DAYS: ${POSTGRES_BACKUP_KEEP_DAYS:?configure POSTGRES_BACKUP_KEEP_DAYS no .env}
+      BACKUP_KEEP_WEEKS: ${POSTGRES_BACKUP_KEEP_WEEKS:?configure POSTGRES_BACKUP_KEEP_WEEKS no .env}
+      BACKUP_KEEP_MONTHS: ${POSTGRES_BACKUP_KEEP_MONTHS:?configure POSTGRES_BACKUP_KEEP_MONTHS no .env}
+    volumes: [postgres_backups:/backups]
+    networks: [internal]
+
+  minio-backup:
+    image: pgsty/mc:RELEASE.2026-09-16T00-00-00Z
+    restart: unless-stopped
+    depends_on: [minio-init]
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["mc alias set source $$S3_ENDPOINT $$S3_ACCESS_KEY $$S3_SECRET_KEY; while true; do mc mirror --overwrite source/$$S3_BUCKET /backups/$$S3_BUCKET; sleep $$MINIO_BACKUP_INTERVAL_SECONDS; done"]
+    environment:
+      S3_ENDPOINT: ${S3_ENDPOINT:?configure S3_ENDPOINT no .env}
+      S3_BUCKET: ${S3_BUCKET:?configure S3_BUCKET no .env}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?configure S3_ACCESS_KEY no .env}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?configure S3_SECRET_KEY no .env}
+      MINIO_BACKUP_INTERVAL_SECONDS: ${MINIO_BACKUP_INTERVAL_SECONDS:?configure MINIO_BACKUP_INTERVAL_SECONDS no .env}
+    volumes: [minio_backups:/backups]
+    networks: [internal]
+
+networks:
+  internal: { internal: true }
+  db-access: {}
+  proxy: {}
+volumes:
+  postgres_data: {}
+  minio_data: {}
+  postgres_backups: {}
+  minio_backups: {}
+  caddy_data: {}
+  caddy_config: {}

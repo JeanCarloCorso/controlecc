@@ -31,8 +31,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from './ui/button';
 import { Edit2Icon, Plus, Trash } from 'lucide-react';
 import { LoadingSpinner } from './ui/loader';
-import { collection, query, getDocs, addDoc, serverTimestamp, doc, setDoc, deleteDoc } from "firebase/firestore";
-import { db } from '@/config/firebase.config';
+import { collection, query, getDocs, addDoc, serverTimestamp, doc, setDoc, deleteDoc } from "@/lib/api-client";
+import { database as db } from '@/lib/api-client';
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
