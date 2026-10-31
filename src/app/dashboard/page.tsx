@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/card";
 import { ArrowRight, FileClock, FilePlus, User, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PageLoader } from "@/components/page-loader";
 
 const DashboardPage = () => {
   const [dashboardData, setDashboardData] = useState<{
@@ -79,32 +80,29 @@ const DashboardPage = () => {
   }, [session]);
 
   if (status === "loading" || !session) {
-    return (
-      <div className="w-full h-screen flex justify-center items-center">
-        <LoadingSpinner />
-      </div>
-    );
+    return <PageLoader label="Preparando o painel..." />;
   } else {
     return (
       <div>
         <ResponsiveMenu></ResponsiveMenu>
 
-        <div className="container mt-5">
-          <div className="flex flex-row justify-between items-center p-3 mb-10 border-b">
+        <main className="container py-8 md:py-10">
+          <div className="gov-page-heading">
             <h2 className="text-3xl font-semibold tracking-tight first:mt-0">
               Painel geral
             </h2>
+            <p>Visão geral das atividades complementares e dos usuários do sistema.</p>
           </div>
-          <div className="flex-row sm:flex-col lg:flex-row justify-center h-full lg:space-x-2 sm:space-y-3 xs:space-y-3">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Card className="w-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   Usuários registrados
                 </CardTitle>
-                <User size={18} />
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#edf5ff] text-[#1351b4]"><User size={20} /></span>
               </CardHeader>
-              <CardContent className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="text-2xl font-bold">
+              <CardContent className="flex flex-wrap items-center justify-between gap-3 pb-5">
+                <div className="text-4xl font-light text-[#071d41]">
                   {dashboardData?.qUsers}
                 </div>
                 <Button
@@ -114,7 +112,7 @@ const DashboardPage = () => {
                   }}
                 >
                   Ver detalhes
-                  <ArrowRight className="ml-5" size={16} />
+                  <ArrowRight className="ml-2" size={16} />
                 </Button>
               </CardContent>
             </Card>
@@ -124,10 +122,10 @@ const DashboardPage = () => {
                 <CardTitle className="text-sm font-medium">
                   Arquivos submetidos
                 </CardTitle>
-                <FilePlus size={18} />
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#edf5ff] text-[#1351b4]"><FilePlus size={20} /></span>
               </CardHeader>
-              <CardContent className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="text-2xl font-bold">
+              <CardContent className="flex flex-wrap items-center justify-between gap-3 pb-5">
+                <div className="text-4xl font-light text-[#071d41]">
                   {dashboardData?.qFiles}
                 </div>
                 <Button
@@ -137,7 +135,7 @@ const DashboardPage = () => {
                   }}
                 >
                   Ver detalhes
-                  <ArrowRight className="ml-5" size={16} />
+                  <ArrowRight className="ml-2" size={16} />
                 </Button>
               </CardContent>
             </Card>
@@ -146,10 +144,10 @@ const DashboardPage = () => {
                 <CardTitle className="text-sm font-medium">
                   Arquivos pendentes
                 </CardTitle>
-                <FileClock size={18} />
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#fff5c2] text-[#6f4e00]"><FileClock size={20} /></span>
               </CardHeader>
-              <CardContent className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="text-2xl font-bold">
+              <CardContent className="flex flex-wrap items-center justify-between gap-3 pb-5">
+                <div className="text-4xl font-light text-[#071d41]">
                   {dashboardData?.qPendingFiles}
                 </div>
                 <Button
@@ -159,7 +157,7 @@ const DashboardPage = () => {
                   }}
                 >
                   Ver pendentes
-                  <ArrowRight className="ml-5" size={16} />
+                  <ArrowRight className="ml-2" size={16} />
                 </Button>
               </CardContent>
             </Card>
@@ -168,10 +166,10 @@ const DashboardPage = () => {
                 <CardTitle className="text-sm font-medium">
                   Arquivos Arquivados
                 </CardTitle>
-                <Archive size={18} />
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e6e6e6] text-[#555555]"><Archive size={20} /></span>
               </CardHeader>
-              <CardContent className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="text-2xl font-bold">
+              <CardContent className="flex flex-wrap items-center justify-between gap-3 pb-5">
+                <div className="text-4xl font-light text-[#071d41]">
                   {dashboardData.qArchivedFiles}
                 </div>
                 <Button
@@ -181,12 +179,12 @@ const DashboardPage = () => {
                   }}
                 >
                   Ver arquivados
-                  <ArrowRight className="ml-5" size={16} />
+                  <ArrowRight className="ml-2" size={16} />
                 </Button>
               </CardContent>
             </Card>
           </div>
-        </div>
+        </main>
       </div>
     );
   }

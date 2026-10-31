@@ -27,6 +27,7 @@ import {
 import { LoadingSpinner } from "@/components/ui/loader";
 import { useToast } from "@/hooks/use-toast";
 import PasswordResetComponent from "@/components/password-reset";
+import { GovFooter, GovPublicHeader } from "@/components/gov-public-header";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Email inválido" }),
@@ -87,16 +88,23 @@ export default function LoginPage() {
 
       setLoading(false);
       console.error('Erro ao fazer login:', error);
-      alert('Erro ao fazer login: ' + error.message);
+      toast({
+        variant: "destructive",
+        title: "Não foi possível entrar",
+        description: "Ocorreu uma falha inesperada. Tente novamente em instantes.",
+      });
     }
   }
 
   return (
-    <div className="max-w-md mx-auto mt-10 m-2">
-      <Card>
+    <div className="gov-auth-page">
+      <GovPublicHeader />
+      <main className="gov-auth-main">
+      <Card className="gov-auth-card">
         <CardHeader>
-          <CardTitle>Login</CardTitle>
-          <CardDescription>Acesse agora sua conta</CardDescription>
+          <p className="gov-eyebrow">Acesso ao sistema</p>
+          <CardTitle>Entrar</CardTitle>
+          <CardDescription>Informe seus dados para acessar o Controle CC.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -111,6 +119,7 @@ export default function LoginPage() {
                     <FormControl>
                       <Input
                         type="email"
+                        autoComplete="email"
                         placeholder="Digite seu email"
                         {...field}
                       />
@@ -129,6 +138,7 @@ export default function LoginPage() {
                     <FormControl>
                       <Input
                         type="password"
+                        autoComplete="current-password"
                         placeholder="Digite sua senha"
                         {...field}
                       />
@@ -141,11 +151,11 @@ export default function LoginPage() {
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? <LoadingSpinner className="text-black"/> : "Entrar"}
               </Button>
-              <div className="w-full flex items-center justify-between">
+              <div className="flex w-full flex-col items-center justify-between gap-2 sm:flex-row">
               
               <PasswordResetComponent />
               <Button type="button" className="px-5 py-0" style={{ marginTop: 5 }} variant={"ghost"} onClick={() => router.push('/register')}>
-                Registre-se
+                Criar conta
               </Button>
 
               </div>
@@ -153,6 +163,8 @@ export default function LoginPage() {
           </Form>
         </CardContent>
       </Card>
+      </main>
+      <GovFooter />
     </div>
   );
 }

@@ -185,9 +185,9 @@ export default function EventTypes() {
   }
 
   return (
-    <div className="pt-4 flex flex-col items-end">
+    <div className="flex w-full flex-col items-stretch pt-4">
 
-      <div className="pb-3">
+      <div className="flex justify-end pb-3">
 
         <Button
           variant={"default"}
@@ -195,14 +195,12 @@ export default function EventTypes() {
         >
           <Plus size={16} />
 
-          Tipo de evento
+          Adicionar tipo de evento
         </Button>
 
       </div>
 
-      <Table
-        className="border"
-      >
+      <Table>
         <TableHeader>
           <TableRow>
             <TableHead className="">Nome</TableHead>
@@ -211,12 +209,13 @@ export default function EventTypes() {
         </TableHeader>
         <TableBody>
           {
-            courses?.map((course: any) => (
+            courses?.length === 0 ? <TableRow><TableCell colSpan={2} className="py-10 text-center text-[#555555]">Nenhum tipo de evento cadastrado.</TableCell></TableRow> : courses?.map((course: any) => (
               <TableRow key={course.name}>
                 <TableCell>{course.name}</TableCell>
                 <TableCell>
                   <div>
                     <Button
+                      aria-label={`Editar tipo de evento ${course.name}`}
                       variant="ghost"
                       onClick={() => {
                         form.setValue("name", course.name);
@@ -231,6 +230,7 @@ export default function EventTypes() {
                     </Button>
 
                     <Button
+                      aria-label={`Excluir tipo de evento ${course.name}`}
                       variant="ghost"
                       onClick={() => {
                         setAlertVisible(true)
@@ -256,9 +256,9 @@ export default function EventTypes() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Voce tem certeza que deseja excluir o Tipo de evento?</AlertDialogTitle>
+            <AlertDialogTitle>Excluir este tipo de evento?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acao nao pode ser revertida
+              Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -271,7 +271,7 @@ export default function EventTypes() {
                 onDelete()
               }}
             >
-              Sim, tenho certeza
+              Excluir tipo de evento
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -279,12 +279,13 @@ export default function EventTypes() {
 
       <Drawer
         open={drawerVisibleForm}
+        onOpenChange={setDrawerVisibleForm}
       >
-        <DrawerContent className="h-80% ">
+        <DrawerContent>
           <DrawerHeader>
-            <DrawerTitle>Adicione novo tipo de evento</DrawerTitle>
+            <DrawerTitle>{editing.status ? "Editar tipo de evento" : "Adicionar tipo de evento"}</DrawerTitle>
           </DrawerHeader>
-          <div className='h-max p-4'>
+          <div className='overflow-y-auto px-4 pb-5 sm:px-6'>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
                 <FormField
@@ -305,12 +306,12 @@ export default function EventTypes() {
                   )}
                 />
 
-                <DrawerFooter className="flex flex-row justify-between m-0 p-0">
-                  <DrawerClose>
-                    <Button variant="outline" onClick={() => { setDrawerVisibleForm(false) }}>Cancelar</Button>
+                <DrawerFooter className="m-0 flex flex-col-reverse gap-2 p-0 sm:flex-row sm:justify-end">
+                  <DrawerClose asChild>
+                    <Button type="button" variant="outline">Cancelar</Button>
                   </DrawerClose>
                   <Button type="submit" disabled={loading}>
-                    {loading ? <LoadingSpinner className="text-dark" /> : "Enviar"}
+                    {loading ? <LoadingSpinner /> : editing.status ? "Salvar alterações" : "Adicionar tipo de evento"}
                   </Button>
                 </DrawerFooter>
               </form>

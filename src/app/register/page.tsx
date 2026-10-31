@@ -30,6 +30,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { LoadingSpinner } from "@/components/ui/loader";
 import ReCAPTCHA from "react-google-recaptcha";
+import { GovFooter, GovPublicHeader } from "@/components/gov-public-header";
 
 const formSchema = z
   .object({
@@ -116,11 +117,14 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 m-2">
-      <Card>
+    <div className="gov-auth-page">
+      <GovPublicHeader />
+      <main className="gov-auth-main py-10">
+      <Card className="gov-auth-card">
         <CardHeader>
-          <CardTitle>Registre-se</CardTitle>
-          <CardDescription>Crie sua conta</CardDescription>
+          <p className="gov-eyebrow">Primeiro acesso</p>
+          <CardTitle>Criar conta</CardTitle>
+          <CardDescription>Preencha seus dados acadêmicos para iniciar o cadastro.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -135,6 +139,7 @@ export default function RegisterPage() {
                     <FormControl>
                       <Input
                         placeholder="Digite seu nome completo"
+                        autoComplete="name"
                         className={fieldState.error ? "text-red-500" : ""}
                         {...field}
                       />
@@ -165,6 +170,7 @@ export default function RegisterPage() {
                     <FormControl>
                       <Input
                         type="email"
+                        autoComplete="email"
                         placeholder="Digite seu email"
                         {...field}
                       />
@@ -182,6 +188,7 @@ export default function RegisterPage() {
                     <FormControl>
                       <Input
                         type="password"
+                        autoComplete="new-password"
                         placeholder="Digite sua senha"
                         {...field}
                       />
@@ -199,6 +206,7 @@ export default function RegisterPage() {
                     <FormControl>
                       <Input
                         type="password"
+                        autoComplete="new-password"
                         placeholder="Confirme sua senha"
                         {...field}
                       />
@@ -226,12 +234,14 @@ export default function RegisterPage() {
                 variant={"ghost"}
                 onClick={() => router.push('/login')}
               >
-                Login
+                Já tenho uma conta
               </Button>
             </form>
           </Form>
         </CardContent>
       </Card>
+      </main>
+      <GovFooter />
     </div>
   );
 }

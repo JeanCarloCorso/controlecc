@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     const passwordHash = await argon2.hash(parsed.data.password, { type: argon2.argon2id });
     const result = await query<{ id: string }>("INSERT INTO users(email, password_hash, full_name, registration_number) VALUES(lower($1), $2, $3, $4) RETURNING id", [parsed.data.email, passwordHash, parsed.data.fullname, parsed.data.registrationNumber]);
     const token = await createAuthToken(result.rows[0].id, "verify_email", 24);
-    await sendAccountEmail(parsed.data.email, "Confirme seu e-mail", `/verify-email?token=${encodeURIComponent(token)}`);
+    await sendAccountEmail(parsed.data.email, "verify_email", `/verify-email?token=${encodeURIComponent(token)}`, parsed.data.fullname);
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error: any) {
     if (error?.code === "23505") return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });

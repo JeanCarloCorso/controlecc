@@ -1,51 +1,45 @@
-import Image from "next/image";
-import React from "react";
-import { Button } from "@/components/ui/button"; // Importação do botão do ShadCN
 import Link from "next/link";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { GovFooter, GovPublicHeader } from "@/components/gov-public-header";
+
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-0">
-      {/* Imagem de fundo */}
-      <div className="absolute inset-0">
-        <Image 
-          src="/computacao-background.webp" // Caminho para sua imagem
-          alt="Background do curso de Ciência da Computação"
-          layout="fill"
-          objectFit="cover"
-          quality={100}
-          className="opacity-70"
-        />
-      </div>
-
-      {/* Conteúdo da página */}
-      <div className="relative z-10 flex flex-col justify-between min-h-screen p-6">
-        {/* Botões no canto superior direito */}
-        <div className="flex justify-end space-x-4">
-          <Link href="/login" passHref>
-            <Button className="px-6 py-2 text-sm font-semibold">
-              Login
-            </Button>
-          </Link>
-          <Link href="/register" passHref>
-            <Button className="px-6 py-2 text-sm font-semibold" variant="outline">
-              Registro
-            </Button>
-          </Link>
-        </div>
-
-        {/* Título e Descrição no centro */}
-        <div className="flex flex-col items-center justify-center text-center text-white">
-          <h1 className="text-3xl font-bold mb-4 drop-shadow-lg">
-            Sistema de Controle - Ciência da Computação
-          </h1>
-          <p className="text-sm max-w-2xl drop-shadow-lg">
-            Bem-vindo ao sistema de controle do curso de Ciência da Computação do Instituto Federal Catarinense. Gerencie seus arquivos, acompanhe seu progresso e muito mais!
-          </p>
-        </div>
-
-        {/* Espaçamento no rodapé (opcional) */}
-        <div />
-      </div>
-    </main>
+    <div className="gov-page">
+      <GovPublicHeader />
+      <main>
+        <section className="border-b border-[#cccccc] bg-white">
+          <div className="container py-12 md:py-16">
+            <div className="max-w-3xl">
+              <p className="gov-eyebrow">Controle CC</p>
+              <h1 className="text-[2.4rem] font-light leading-tight md:text-[3rem]">Controle de atividades complementares</h1>
+              <p className="mt-5 text-lg leading-relaxed text-[#555555]">Sistema do curso de Ciência da Computação para envio e validação de comprovantes de atividades complementares.</p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Button asChild size="lg"><Link href="/login">Entrar <ArrowRight className="ml-2" size={18} /></Link></Button>
+                <Button asChild size="lg" variant="outline"><Link href="/register">Criar conta</Link></Button>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section className="container py-10 md:py-12" aria-labelledby="sobre-sistema">
+          <div className="max-w-3xl rounded-sm border border-[#cccccc] bg-white p-6 md:p-8">
+            <h2 id="sobre-sistema" className="text-2xl font-semibold">Neste sistema você pode</h2>
+            <ul className="mt-5 space-y-4">
+              {[
+                "Enviar certificados e outros comprovantes em PDF.",
+                "Acompanhar a situação das atividades enviadas.",
+                "Consultar a carga horária aprovada.",
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-3 text-base text-[#333333]">
+                  <CheckCircle2 className="mt-0.5 shrink-0 text-[#168821]" size={20} aria-hidden="true" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      </main>
+      <GovFooter />
+    </div>
   );
 }

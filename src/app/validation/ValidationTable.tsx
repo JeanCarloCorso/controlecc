@@ -46,10 +46,16 @@ const ValidationTable: React.FC<ValidationTableProps> = ({
   setShowArchiveDialog,
   setAlertVisible,
   statuses,
-  statusesColors,
 }) => {
+  const statusClasses: Record<string, string> = {
+    pending: "border-[#ffcd07] bg-[#fff5c2] text-[#333333]",
+    rejected: "border-[#e52207] bg-[#fde0db] text-[#8b0a03]",
+    approved: "border-[#168821] bg-[#e3f5e1] text-[#0b4b3f]",
+    archived: "border-[#636363] bg-[#e6e6e6] text-[#333333]",
+    processing: "border-[#155bcb] bg-[#d4e5ff] text-[#0c326f]",
+  };
   return (
-    <Table className="border">
+    <Table>
       <TableHeader>
         <TableRow>
           <TableHead>Aluno</TableHead>
@@ -84,18 +90,20 @@ const ValidationTable: React.FC<ValidationTableProps> = ({
                     ).toLocaleString()
                   : "Data não disponível"}
               </TableCell>
-              <TableCell>{file.workload}</TableCell>
+              <TableCell>{file.workload}h</TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
-                  <Badge variant={statusesColors[file.status] as any}>
+                  <Badge variant="outline" className={statusClasses[file.status]}>
                     {statuses[file.status]}
                   </Badge>
                 </div>
               </TableCell>
-              <TableCell className="flex">
+              <TableCell>
+                <div className="flex items-center gap-1">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
+                      aria-label={`Validar arquivo de ${file.user.fullname}`}
                       variant={"ghost"}
                       onClick={() => {
                         setDrawerVisibleView(true);
@@ -117,6 +125,7 @@ const ValidationTable: React.FC<ValidationTableProps> = ({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
+                      aria-label={`Baixar arquivo de ${file.user.fullname}`}
                       variant={"ghost"}
                       disabled={downloadLoadingFiles[file.uid] || false}
                       onClick={() => {
@@ -136,6 +145,7 @@ const ValidationTable: React.FC<ValidationTableProps> = ({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
+                      aria-label={`Arquivar arquivo de ${file.user.fullname}`}
                       variant="ghost"
                       onClick={() => {
                         if (file.status !== "approved" || file.archived) return;
@@ -159,13 +169,14 @@ const ValidationTable: React.FC<ValidationTableProps> = ({
                       : "Arquivar arquivo"}
                   </TooltipContent>
                 </Tooltip>
+                </div>
               </TableCell>
             </TableRow>
           ))
         ) : (
           <TableRow>
             <TableCell colSpan={7} className="text-center">
-              Nenhum dado disponível
+              Nenhuma atividade encontrada para os filtros selecionados.
             </TableCell>
           </TableRow>
         )}

@@ -180,8 +180,8 @@ export default function Courses() {
   }
 
   return (
-    <div className="pt-4 flex flex-col items-end">
-      <div className="pb-3">
+    <div className="flex w-full flex-col items-stretch pt-4">
+      <div className="flex justify-end pb-3">
         <Button
           variant={"default"}
           onClick={() => {
@@ -189,11 +189,11 @@ export default function Courses() {
           }}
         >
           <Plus size={16} />
-          Curso
+          Adicionar curso
         </Button>
       </div>
 
-      <Table className="border">
+      <Table>
         <TableHeader>
           <TableRow>
             <TableHead className="">Nome</TableHead>
@@ -202,7 +202,7 @@ export default function Courses() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {courses?.map((course: any) => (
+          {courses?.length === 0 ? <TableRow><TableCell colSpan={3} className="py-10 text-center text-[#555555]">Nenhum curso cadastrado.</TableCell></TableRow> : courses?.map((course: any) => (
             <TableRow key={course.name}>
               <TableCell>{course.name}</TableCell>
               <TableCell>
@@ -213,6 +213,7 @@ export default function Courses() {
               <TableCell>
                 <div>
                   <Button
+                    aria-label={`Editar curso ${course.name}`}
                     variant="ghost"
                     onClick={() => {
                       form.setValue("name", course.name);
@@ -227,6 +228,7 @@ export default function Courses() {
                   </Button>
 
                   <Button
+                    aria-label={`Excluir curso ${course.name}`}
                     variant="ghost"
                     onClick={() => {
                       setAlertVisible(true);
@@ -249,10 +251,10 @@ export default function Courses() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Voce tem certeza que deseja excluir o curso?
+              Excluir este curso?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acao nao pode ser revertida
+              Esta ação não pode ser desfeita. Confirme apenas se o curso não for mais utilizado.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -269,18 +271,18 @@ export default function Courses() {
                 onDelete();
               }}
             >
-              Sim, tenho certeza
+              Excluir curso
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      <Drawer open={drawerVisibleForm}>
-        <DrawerContent className="h-80% ">
+      <Drawer open={drawerVisibleForm} onOpenChange={setDrawerVisibleForm}>
+        <DrawerContent>
           <DrawerHeader>
-            <DrawerTitle>Adicione novo curso</DrawerTitle>
+            <DrawerTitle>{editing.status ? "Editar curso" : "Adicionar curso"}</DrawerTitle>
           </DrawerHeader>
-          <div className="h-max p-4">
+          <div className="overflow-y-auto px-4 pb-5 sm:px-6">
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
@@ -304,13 +306,11 @@ export default function Courses() {
                   )}
                 />
 
-                <DrawerFooter className="flex flex-row justify-between m-0 p-0">
-                  <DrawerClose>
+                <DrawerFooter className="m-0 flex flex-col-reverse gap-2 p-0 sm:flex-row sm:justify-end">
+                  <DrawerClose asChild>
                     <Button
+                      type="button"
                       variant="outline"
-                      onClick={() => {
-                        setDrawerVisibleForm(false);
-                      }}
                     >
                       Cancelar
                     </Button>
@@ -319,7 +319,7 @@ export default function Courses() {
                     {loading ? (
                       <LoadingSpinner className="text-dark" />
                     ) : (
-                      "Enviar"
+                      editing.status ? "Salvar alterações" : "Adicionar curso"
                     )}
                   </Button>
                 </DrawerFooter>

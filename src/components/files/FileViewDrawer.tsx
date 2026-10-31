@@ -26,17 +26,18 @@ const FileViewDrawer: React.FC<FileViewDrawerProps> = ({
   setPdfLoading
 }) => {
   return (
-    <Drawer open={drawerVisibleView}>
-      <DrawerContent className="h-80% ">
+    <Drawer open={drawerVisibleView} onOpenChange={setDrawerVisibleView}>
+      <DrawerContent className="h-[92dvh]">
         <DrawerHeader>
           <DrawerTitle>Visualize seu arquivo</DrawerTitle>
         </DrawerHeader>
-        <div>
+        <div className="min-h-0 flex-1 overflow-hidden bg-[#f0f0f0]">
           {pdfUrl ? (
             <iframe
               src={pdfUrl}
               width="100%"
-              height="600px"
+              height="100%"
+              className="h-full min-h-[55dvh] w-full"
               title="PDF Viewer"
               onLoad={() => setPdfLoading(false)}
               style={{ display: pdfLoading ? 'none' : 'block' }}
@@ -48,9 +49,9 @@ const FileViewDrawer: React.FC<FileViewDrawerProps> = ({
             <div className="h-full w-full flex justify-center items-center"><LoadingSpinner className="bg-dark" /></div>
           )}
         </div>
-        <DrawerFooter>
-          <DrawerClose>
-            <Button variant="outline" onClick={() => { setDrawerVisibleView(false) }}>Cancelar</Button>
+        <DrawerFooter className="border-t bg-white sm:flex-row sm:justify-end">
+          <DrawerClose asChild>
+            <Button variant="outline">Fechar</Button>
           </DrawerClose>
         </DrawerFooter>
       </DrawerContent>

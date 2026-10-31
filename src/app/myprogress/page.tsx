@@ -8,7 +8,6 @@ import { collection, query, where, getDocs, database as db } from "@/lib/api-cli
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingSpinner } from "@/components/ui/loader";
-import { Progress } from "@/components/ui/progress";
 import {
   Card,
   CardContent,
@@ -17,6 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import withAuthorization from "@/components/with-authorization";
+import { PageLoader } from "@/components/page-loader";
 
 const ProgressPage = () => {
   const [myWorkload, setMyWorkload] = useState(0);
@@ -60,37 +60,33 @@ const ProgressPage = () => {
   }, [session, status]);
 
   if (status === "loading" || !session) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <LoadingSpinner className="bg-dark" />
-      </div>
-    );
+    return <PageLoader label="Calculando suas horas aprovadas..." />;
   }
 
   return (
     <div>
       <ResponsiveMenu />
-      <div className="container mt-5">
-        <div className="flex flex-row justify-between items-center p-3 mb-10 border-b">
+      <main className="container py-8 md:py-10">
+        <div className="gov-page-heading">
           <h2 className="text-3xl font-semibold tracking-tight first:mt-0">
             Meu progresso
           </h2>
+          <p>Consulte a carga horária aprovada nas suas atividades complementares.</p>
         </div>
-        <Card>
+        <Card className="max-w-3xl overflow-hidden border-t-4 border-t-[#168821]">
           <CardHeader>
-            <CardTitle>Atividades</CardTitle>
-            <CardDescription>Acompanhe seu progresso atual</CardDescription>
+            <CardTitle>Horas aprovadas</CardTitle>
+            <CardDescription>Total reconhecido pela coordenação nas atividades analisadas.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div>
-              <p className="text-sm font-semibold mb-2">
-                Carga horária concluída: {myWorkload}h
-              </p>
+            <div className="flex flex-col gap-2 rounded-sm bg-[#e3f5e1] p-5 sm:flex-row sm:items-end sm:justify-between">
+              <div><span className="text-5xl font-light text-[#0b4b3f]">{myWorkload}</span><span className="ml-2 text-xl font-semibold text-[#0b4b3f]">horas</span></div>
+              <p className="max-w-sm text-sm text-[#333333]">Somente atividades com status <strong>Aprovado</strong> entram neste total.</p>
             </div>
-            <Progress value={myWorkload} />
+            <p className="mt-5 text-sm text-[#555555]">Consulte a página de atividades para acompanhar documentos pendentes ou rejeitados.</p>
           </CardContent>
         </Card>
-      </div>
+      </main>
     </div>
   );
 };

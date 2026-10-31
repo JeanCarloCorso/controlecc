@@ -21,6 +21,7 @@ import withAuthorization from '@/components/with-authorization';
 import Courses from '@/components/courses'
 import Projects from '@/components/projects';
 import EventTypes from '@/components/event-types';
+import { PageLoader } from '@/components/page-loader';
 
 const AdminPanelPage = () => {
   const [courses, setCourses] = useState<any[]>([]);
@@ -75,21 +76,21 @@ const AdminPanelPage = () => {
 
 
   if (status === 'loading' || !session) {
-    return <div className="flex justify-center items-center h-screen">
-      <LoadingSpinner className="bg-dark" /></div>; // Mostra um carregando enquanto a sessão é verificada
+    return <PageLoader label="Carregando configurações..." />;
   }
 
   return (
     <div>
       <ResponsiveMenu />
-      <div className="container mt-5">
-        <div className="flex flex-row justify-between items-center p-3 mb-10 border-b">
+      <main className="container py-8 md:py-10">
+        <div className="gov-page-heading">
           <h2 className="text-3xl font-semibold tracking-tight first:mt-0">
             Painel administrativo
           </h2>
+          <p>Gerencie cursos, projetos e tipos de evento usados no cadastro de atividades.</p>
         </div>
         <Tabs defaultValue="courses" className="w-full pb-4">
-          <TabsList>
+          <TabsList className="flex h-auto w-full justify-start overflow-x-auto">
             <TabsTrigger value="courses">Cursos</TabsTrigger>
             <TabsTrigger value="projects">Projetos</TabsTrigger>
             <TabsTrigger value="eventType">Tipos de evento</TabsTrigger>
@@ -105,7 +106,7 @@ const AdminPanelPage = () => {
           </TabsContent>
         </Tabs>
 
-      </div>
+      </main>
     </div>
   );
 };

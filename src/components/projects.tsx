@@ -121,7 +121,7 @@ export default function Projects() {
     }
     getUserInfo();
 
-  }, [drawerVisibleForm, alertVisible]);
+  }, [drawerVisibleForm, alertVisible, selectedCourse.name]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -250,9 +250,9 @@ export default function Projects() {
   }
 
   return (
-    <div className="pt-4 flex flex-col items-end">
+    <div className="flex w-full flex-col items-stretch pt-4">
 
-      <div className="pb-3 flex flex-row ">
+      <div className="flex flex-col gap-3 pb-3 sm:flex-row sm:justify-end">
         <Select
           onValueChange={(value) => {
             let selected = courses.filter((val) => val.id === value)[0];
@@ -263,7 +263,7 @@ export default function Projects() {
 
           }}
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[220px]">
             <SelectValue
               defaultValue={selectedCourse.id}
               placeholder={selectedCourse.name}
@@ -292,7 +292,7 @@ export default function Projects() {
 
 
         <Button
-          className="ml-3"
+          className="w-full sm:w-auto"
           variant={"default"}
           onClick={(e) => {
             e.preventDefault();
@@ -303,14 +303,12 @@ export default function Projects() {
         >
           <Plus size={16} />
 
-          Projeto
+          Adicionar projeto
         </Button>
 
       </div>
 
-      <Table
-        className="border"
-      >
+      <Table>
         <TableHeader>
           <TableRow>
             <TableHead className="">Nome</TableHead>
@@ -324,7 +322,7 @@ export default function Projects() {
 
               <TableRow>
                 <TableCell colSpan={4} className="text-center">
-                  Nenhum dado disponível
+                  Nenhum projeto cadastrado para este curso.
                 </TableCell>
               </TableRow>
               :
@@ -382,9 +380,9 @@ export default function Projects() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Voce tem certeza que deseja excluir o curso?</AlertDialogTitle>
+            <AlertDialogTitle>Excluir este projeto?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acao nao pode ser revertida
+              Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -397,7 +395,7 @@ export default function Projects() {
                 onDelete()
               }}
             >
-              Sim, tenho certeza
+              Excluir projeto
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -405,12 +403,13 @@ export default function Projects() {
 
       <Drawer
         open={drawerVisibleForm}
+        onOpenChange={setDrawerVisibleForm}
       >
-        <DrawerContent className="h-80% ">
+        <DrawerContent>
           <DrawerHeader>
-            <DrawerTitle>Adicione novo curso</DrawerTitle>
+            <DrawerTitle>{editing.status ? "Editar projeto" : "Adicionar projeto"}</DrawerTitle>
           </DrawerHeader>
-          <div className='h-max p-4'>
+          <div className='overflow-y-auto px-4 pb-5 sm:px-6'>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
                 <FormField
@@ -468,12 +467,12 @@ export default function Projects() {
                   )}
                 />
 
-                <DrawerFooter className="flex flex-row justify-between m-0 p-0">
-                  <DrawerClose>
-                    <Button variant="outline" onClick={() => { setDrawerVisibleForm(false) }}>Cancelar</Button>
+                <DrawerFooter className="m-0 flex flex-col-reverse gap-2 p-0 sm:flex-row sm:justify-end">
+                  <DrawerClose asChild>
+                    <Button type="button" variant="outline">Cancelar</Button>
                   </DrawerClose>
                   <Button type="submit" disabled={loading}>
-                    {loading ? <LoadingSpinner className="text-dark" /> : "Enviar"}
+                    {loading ? <LoadingSpinner /> : editing.status ? "Salvar alterações" : "Adicionar projeto"}
                   </Button>
                 </DrawerFooter>
               </form>

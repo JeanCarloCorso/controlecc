@@ -30,17 +30,19 @@ const ValidationDrawer: React.FC<ValidationDrawerProps> = ({
   currentFile,
 }) => {
   return (
-    <Drawer open={drawerVisibleView}>
+    <Drawer open={drawerVisibleView} onOpenChange={setDrawerVisibleView}>
       <DrawerTrigger asChild></DrawerTrigger>
-      <DrawerContent className="h-[90%]">
+      <DrawerContent className="h-[92dvh]">
         <DrawerHeader>
           <DrawerTitle className="text-xl font-bold">Validar atividade</DrawerTitle>
+          {currentFile?.user?.fullname && <p className="text-sm text-[#555555]">Documento enviado por <strong>{currentFile.user.fullname}</strong></p>}
         </DrawerHeader>
-        <div className="flex flex-col lg:flex-row w-full h-full gap-4 p-4 overflow-y-auto">
-          <div className="w-full lg:w-1/4 flex flex-col gap-4">
-            <Label htmlFor="workload">Carga Horária</Label>
+        <div className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-y-auto p-4 lg:flex-row lg:overflow-hidden">
+          <div className="flex w-full shrink-0 flex-col gap-3 lg:w-1/4 lg:overflow-y-auto">
+            <Label htmlFor="workload">Carga horária aprovada</Label>
             <Input
               type="number"
+              min="1"
               placeholder="Carga Horária"
               value={formValidation.workload}
               onChange={(e) => setFormValidation({ ...formValidation, workload: e.target.value })}
@@ -48,7 +50,7 @@ const ValidationDrawer: React.FC<ValidationDrawerProps> = ({
             <Label htmlFor="status">Status</Label>
             <Select
               onValueChange={(value) => setFormValidation({ ...formValidation, status: value })}
-              defaultValue={formValidation.status}
+              value={formValidation.status}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o status" />
@@ -59,15 +61,15 @@ const ValidationDrawer: React.FC<ValidationDrawerProps> = ({
                 <SelectItem value="rejected">Rejeitado</SelectItem>
               </SelectContent>
             </Select>
-            <Label htmlFor="observation">Observação</Label>
+            <Label htmlFor="observation">Observação para o estudante</Label>
             <Input
               type="text"
-              placeholder="Observação"
+              placeholder="Explique a decisão ou informe os ajustes necessários"
               value={formValidation.observation}
               onChange={(e) => setFormValidation({ ...formValidation, observation: e.target.value })}
             />
           </div>
-          <div className="w-full lg:w-3/4 h-full flex justify-center items-center overflow-hidden">
+          <div className="flex min-h-[45dvh] w-full items-center justify-center overflow-hidden rounded-sm border bg-[#f0f0f0] lg:h-full lg:min-h-0 lg:w-3/4">
             {pdfUrl && !pdfLoading ? (
               <iframe
                 src={pdfUrl}
@@ -83,18 +85,17 @@ const ValidationDrawer: React.FC<ValidationDrawerProps> = ({
             )}
           </div>
         </div>
-        <DrawerFooter>
-          <DrawerClose className="flex justify-between">
+        <DrawerFooter className="flex flex-col-reverse gap-2 border-t bg-white sm:flex-row sm:justify-end">
+          <DrawerClose asChild>
             <Button
+              type="button"
               variant="outline"
-              className="mr-6"
-              onClick={() => {
-                setDrawerVisibleView(false);
-              }}
             >
               Cancelar
             </Button>
+          </DrawerClose>
             <Button
+              type="button"
               variant="default"
               onClick={() => {
                 setAlertVisible({ visible: true, id: currentFile.id });
@@ -102,7 +103,6 @@ const ValidationDrawer: React.FC<ValidationDrawerProps> = ({
             >
               Salvar
             </Button>
-          </DrawerClose>
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

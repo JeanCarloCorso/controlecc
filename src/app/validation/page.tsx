@@ -3,7 +3,7 @@ import ResponsiveMenu from "@/components/responsive-menu";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { collection, query, getDocs, doc, setDoc, database as db, storage } from "@/lib/api-client";
 import { FileDownIcon, FilterIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ import ValidationFilters from "./ValidationFilters";
 import ValidationTable from "./ValidationTable";
 import ValidationDrawer from "./ValidationDrawer";
 import ValidationArchiveDialog from "./ValidationArchiveDialog";
+import { PageLoader } from "@/components/page-loader";
 
 interface Filters {
   status: string;
@@ -129,9 +130,9 @@ const ValidationPage = () => {
     if (status === "loading") return;
     if (!session) router.push("/login");
     else if (session.user.role !== "admin") router.push("/files");
-  }, [session, status]);
+  }, [session, status, router]);
 
-  async function getAllFiles() {
+  const getAllFiles = useCallback(async () => {
     setLoading(true);
 
     if (!session) {
@@ -178,7 +179,7 @@ const ValidationPage = () => {
       setLoading(false);
       console.error("Erro ao obter lista de arquivos:", error);
     }
-  }
+  }, [session]);
 
   const usersList = useMemo(() => {
     const users = new Map<string, string>();
@@ -258,7 +259,7 @@ const ValidationPage = () => {
 
   useEffect(() => {
     getAllFiles();
-  }, [session, status, drawerVisibleView, router]);
+  }, [getAllFiles, drawerVisibleView]);
 
   useEffect(() => {
     if (!pdfPath) {
@@ -495,22 +496,21 @@ const ValidationPage = () => {
   };
 
   if (status === "loading" || !session) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <LoadingSpinner className="bg-dark" />
-      </div>
-    );
+    return <PageLoader label="Carregando atividades para validação..." />;
   } else {
     return (
       <TooltipProvider>
         <ResponsiveMenu />
-        <div className="container mt-5">
-          <div className="flex flex-row justify-between items-center p-3 mb-4 border-b">
+        <main className="container py-8 md:py-10">
+          <div className="gov-page-heading flex flex-col items-stretch justify-between gap-5 xl:flex-row xl:items-end">
+            <div>
             <h2 className="text-3xl font-semibold tracking-tight first:mt-0">
               Validação de atividades
             </h2>
-            <div className="flex items-center gap-2">
-              <div className="relative w-[280px]">
+            <p>Analise documentos, filtre registros e atualize a situação das atividades.</p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="relative w-full sm:w-[280px]">
                 <Input
                   type="text"
                   placeholder="Pesquisar aluno"
@@ -567,6 +567,7 @@ const ValidationPage = () => {
 
               <Button
                 variant="outline"
+                className="w-full sm:w-auto"
                 disabled={!selectedUserId || mergedPdfLoading}
                 onClick={handleDownloadMergedPdf}
               >
@@ -582,9 +583,12 @@ const ValidationPage = () => {
 
               <Button
                 variant="outline"
+                className="w-full sm:w-auto"
+                aria-label={filtersVisible ? "Ocultar filtros" : "Exibir filtros"}
                 onClick={() => setFiltersVisible(!filtersVisible)}
               >
                 <FilterIcon size={18} />
+                <span className="ml-2 sm:hidden">{filtersVisible ? "Ocultar filtros" : "Exibir filtros"}</span>
               </Button>
             </div>
           </div>
@@ -606,6 +610,12 @@ const ValidationPage = () => {
               filterDisplayNames={filterDisplayNames}
               statuses={statuses}
             />
+          </div>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-sm text-[#555555]">
+            <p aria-live="polite"><strong className="text-[#333333]">{filteredFilesList.length}</strong> {filteredFilesList.length === 1 ? "atividade encontrada" : "atividades encontradas"}</p>
+            {(selectedUserId || filters.status !== "all" || filters.description || filters.createdAt || filters.workload || filters.user || filters.includeArchived) && (
+              <Button type="button" variant="ghost" size="sm" onClick={() => { clearAllFilters(); setSelectedUserId(""); setUserSearch(""); }}>Limpar pesquisa e filtros</Button>
+            )}
           </div>
           <ValidationTable
             filteredFilesList={filteredFilesList}
@@ -663,7 +673,7 @@ const ValidationPage = () => {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-        </div>
+        </main>
       </TooltipProvider>
     );
   }

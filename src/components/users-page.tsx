@@ -177,7 +177,7 @@ export default function UsersPage() {
             </h2>
         </div>
 
-        <Table className="border">
+        <Table>
             <TableHeader>
             <TableRow>
                 <TableHead>Nome</TableHead>

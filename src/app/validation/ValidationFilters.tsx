@@ -25,7 +25,8 @@ const ValidationFilters: React.FC<FiltersProps> = ({
 }) => {
   return (
     <>
-      <div className="mb-4 grid grid-cols-3 gap-4 bg-slate-900 p-4 rounded-sm">
+      <section className="mb-4 rounded-sm border border-[#adcdff] bg-[#edf5ff] p-4" aria-label="Filtros de atividades">
+      <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Select
           onValueChange={(value) => handleFilterChange("status", value)}
           value={filters.status}
@@ -64,7 +65,7 @@ const ValidationFilters: React.FC<FiltersProps> = ({
           onChange={(e) => handleFilterChange("workload", e.target.value)}
         />
 
-<div className="flex items-center gap-3">
+<div className="flex min-h-11 items-center gap-3 rounded-sm border border-[#cccccc] bg-white px-3">
         <Checkbox id="includeArchived" checked={filters.includeArchived} onCheckedChange={value => handleFilterChange("includeArchived", value as boolean)} />
         <Label htmlFor="includeArchived">Incluir arquivados</Label>
       </div>
@@ -80,7 +81,7 @@ const ValidationFilters: React.FC<FiltersProps> = ({
               <Badge
                 key={keyStr}
                 variant="secondary"
-                className="flex items-center text-xs font-medium p-3 h-4"
+                className="flex min-h-7 items-center px-3 py-1 text-xs font-medium"
               >
                 <span>
                   {`
@@ -96,7 +97,8 @@ const ValidationFilters: React.FC<FiltersProps> = ({
                 </span>
                 <button
                   onClick={() => removeFilter(keyStr)}
-                  className="text-white ml-3"
+                  className="ml-3 text-[#1351b4]"
+                  aria-label={`Remover filtro ${filterDisplayNames[keyStr] || keyStr}`}
                 >
                   ✕
                 </button>
@@ -112,13 +114,14 @@ const ValidationFilters: React.FC<FiltersProps> = ({
         ) && (
           <Button
             onClick={clearAllFilters}
-            className="badge text-xs font-medium ml-5 p-3 h-4 rounded-full"
+            className="min-h-8 px-3 py-1 text-xs font-medium"
             variant={"destructive"}
           >
             Remover todos
           </Button>
         )}
       </div>
+      </section>
     </>
   );
 };

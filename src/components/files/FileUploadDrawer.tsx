@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from '@/components/ui/button';
 import { Plus, CalendarIcon } from 'lucide-react';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -36,7 +36,7 @@ const FileUploadDrawer: React.FC<FileUploadDrawerProps> = ({
 }) => {
   const fileRef = form.register("file", { required: true });
   return (
-    <Drawer open={drawerVisibleForm}>
+    <Drawer open={drawerVisibleForm} onOpenChange={setDrawerVisibleForm}>
       <DrawerTrigger asChild>
         <Button
           variant={"secondary"}
@@ -46,12 +46,12 @@ const FileUploadDrawer: React.FC<FileUploadDrawerProps> = ({
           Adicionar atividade
         </Button>
       </DrawerTrigger>
-      <DrawerContent className="h-80% ">
+      <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>Adicione novos arquivos</DrawerTitle>
-          <DrawerDescription>Arquivos duplicados sao verificados automaticamente.</DrawerDescription>
+          <DrawerTitle>Adicionar atividade</DrawerTitle>
+          <DrawerDescription>Arquivos duplicados são verificados automaticamente. Envie documentos em PDF.</DrawerDescription>
         </DrawerHeader>
-        <div className='h-max p-4'>
+        <div className='overflow-y-auto px-4 pb-5 sm:px-6'>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
               <FormField
@@ -76,10 +76,10 @@ const FileUploadDrawer: React.FC<FileUploadDrawerProps> = ({
                 name="description"
                 render={({ field, fieldState }) => (
                   <FormItem>
-                    <FormLabel>Descricao da atividade </FormLabel>
+                    <FormLabel>Descrição da atividade</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Digite uma descricao para a atividade"
+                        placeholder="Digite uma descrição para a atividade"
                         className={fieldState.error ? "text-color-red" : ""}
                         {...field}
                       />
@@ -93,11 +93,13 @@ const FileUploadDrawer: React.FC<FileUploadDrawerProps> = ({
                 name="workload"
                 render={({ field, fieldState }) => (
                   <FormItem>
-                    <FormLabel>Carga horaria </FormLabel>
+                    <FormLabel>Carga horária</FormLabel>
                     <FormControl>
                       <Input
                         type='number'
-                        placeholder="Digite a carga horaria em horas"
+                        min="1"
+                        step="1"
+                        placeholder="Digite a carga horária em horas"
                         className={fieldState.error ? "text-color-red" : ""}
                         {...field}
                       />
@@ -159,18 +161,20 @@ const FileUploadDrawer: React.FC<FileUploadDrawerProps> = ({
                         placeholder="Arquivo"
                         type="file"
                         accept="application/pdf"
+                        className="h-auto cursor-pointer py-3 file:mr-3 file:rounded-full file:bg-[#edf5ff] file:px-3 file:py-1 file:text-[#1351b4]"
                       />
                     </FormControl>
+                    <FormDescription>Somente PDF, com tamanho máximo de 5 MB.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <DrawerFooter className="flex flex-row justify-between m-0 p-0">
-                <DrawerClose>
-                  <Button variant="outline" onClick={() => { setDrawerVisibleForm(false) }}>Cancelar</Button>
+              <DrawerFooter className="m-0 flex flex-col-reverse gap-2 p-0 sm:flex-row sm:justify-end">
+                <DrawerClose asChild>
+                  <Button type="button" variant="outline">Cancelar</Button>
                 </DrawerClose>
-                <Button type="submit" disabled={loading}>
-                  {loading ? <LoadingSpinner className="text-dark" /> : "Enviar"}
+                <Button type="submit" className="w-full sm:w-auto" disabled={loading}>
+                  {loading ? <><LoadingSpinner className="mr-2" /> Enviando...</> : "Enviar para validação"}
                 </Button>
               </DrawerFooter>
             </form>

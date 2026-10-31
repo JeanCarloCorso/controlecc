@@ -2,7 +2,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ReactNode, useEffect } from "react";
-import { LoadingSpinner } from "./ui/loader";
+import { PageLoader } from "./page-loader";
 
 interface WithAuthorizationProps {
     children: ReactNode;
@@ -26,14 +26,10 @@ const withAuthorization = (Component: any, allowedRoles: string[]) => {
                     router.push("/myprogress");
                 }
             }
-        }, [status, session, router, allowedRoles]);
+        }, [status, session, router]);
 
         // Show a loading state while checking session
-        if (status === "loading") return (
-            <div className="flex justify-center items-center h-screen">
-                <LoadingSpinner className="bg-dark" />
-            </div>
-        );
+        if (status === "loading") return <PageLoader label="Verificando seu acesso..." />;
 
         // If authenticated and role is allowed, render the component
         if (status === "authenticated" && allowedRoles.includes(session?.user?.role || "")) {

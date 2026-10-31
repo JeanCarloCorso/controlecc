@@ -24,14 +24,15 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import FilesTable from "@/components/files/FilesTable";
 import FileUploadDrawer from "@/components/files/FileUploadDrawer";
 import FileViewDrawer from "@/components/files/FileViewDrawer";
+import { PageLoader } from "@/components/page-loader";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nome é obrigatório" }),
   description: z.string().min(2, {
-    message: "Descricao é obrigatória",
+    message: "Descrição é obrigatória",
   }),
-  file: z.any().optional(),
-  workload: z.string().min(1, { message: "Carga horaria é obrigatória" }),
+  file: z.any().refine((files) => files?.length > 0, "Selecione um arquivo PDF."),
+  workload: z.string().min(1, { message: "Carga horária é obrigatória" }).refine((value) => Number(value) > 0, "Informe uma carga horária maior que zero."),
   completionDate: z.date({
     required_error: "Data de realização é obrigatória",
   }),
@@ -152,9 +153,9 @@ const FilesPage = () => {
           if (!querySnapshot.empty) {
             toast({
               variant: "destructive",
-              title: "Ops! Ja existe um arquivo igual ao adicionado.",
+              title: "Este arquivo já foi enviado",
               description:
-                "Adicione um novo arquivo ou tente novamente mais tarde.",
+                "Escolha outro comprovante para evitar atividades duplicadas.",
             });
             setLoading(false);
             setDrawerVisibleForm(false);
@@ -185,8 +186,8 @@ const FilesPage = () => {
             await addDoc(collection(db, "files"), fileValidation);
 
             toast({
-              title: "Atividade cadastrada com sucesso!",
-              description: "Acompanhe o progresso na sua conta.",
+              title: "Atividade enviada com sucesso",
+              description: "O documento foi recebido e aguarda validação.",
             });
 
             setLoading(false);
@@ -241,19 +242,20 @@ const FilesPage = () => {
           arrayFileslist.push(doc.data());
         });
 
-        setFilesList(arrayFileslist);
+        setFilesList(arrayFileslist.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)));
 
         setLoading(false);
       } catch (error) {
         console.error("Erro ao obter lista de arquivos:", error);
+        setLoading(false);
+        toast({ variant: "destructive", title: "Não foi possível carregar as atividades", description: "Atualize a página ou tente novamente mais tarde." });
       }
     }
     getAllFiles();
-  }, [session, status, drawerVisibleForm]);
+  }, [session, status, drawerVisibleForm, toast]);
 
   useEffect(() => {
     if (pdfPath === null || pdfPath === undefined) {
-      console.log("pdfPath está nulo ou indefinido:", pdfPath);
       return;
     }
 
@@ -267,30 +269,30 @@ const FilesPage = () => {
           );
           return;
         }
-        console.log("URL do PDF obtida:", url);
         setPdfUrl(url);
         setPdfLoading(false);
       })
       .catch((error) => {
         console.error("Erro ao obter a URL do PDF:", error);
+        setPdfLoading(false);
+        toast({ variant: "destructive", title: "Não foi possível abrir o documento", description: "Tente novamente em instantes." });
       });
-  }, [drawerVisibleView, pdfPath]);
+  }, [drawerVisibleView, pdfPath, toast]);
 
   if (status === "loading" || !session) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <LoadingSpinner className="bg-dark" />
-      </div>
-    );
+    return <PageLoader label="Carregando suas atividades..." />;
   } else {
     return (
       <div>
         <ResponsiveMenu />
-        <div className="container mt-5">
-          <div className="flex flex-row justify-between items-center p-3 mb-10 border-b">
+        <main className="container py-8 md:py-10">
+          <div className="gov-page-heading flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+            <div>
             <h2 className="text-3xl font-semibold tracking-tight first:mt-0">
               Atividades
             </h2>
+            <p>Envie comprovantes e acompanhe a situação das suas atividades.</p>
+            </div>
             <FileUploadDrawer
               drawerVisibleForm={drawerVisibleForm}
               setDrawerVisibleForm={setDrawerVisibleForm}
@@ -318,7 +320,7 @@ const FilesPage = () => {
             pdfLoading={pdfLoading}
             setPdfLoading={setPdfLoading}
           />
-        </div>
+        </main>
       </div>
     );
   }

@@ -5,8 +5,11 @@ import { ClientProviders } from "@/components/client-provider";
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: "Controle CC",
-  description: "",
+  title: {
+    default: "Controle CC | Ciência da Computação",
+    template: "%s | Controle CC",
+  },
+  description: "Sistema de gestão de atividades complementares do curso de Ciência da Computação.",
 };
 
 export default function RootLayout({
@@ -15,11 +18,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning={true}>
+    <html lang="pt-BR" suppressHydrationWarning={true}>
       <body
         className={
           cn(
-            "min-h-screen bg-background font-sans antialiased"
+            "min-h-screen bg-background antialiased"
           )
         }
       >

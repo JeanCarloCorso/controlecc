@@ -36,6 +36,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { PageLoader } from "@/components/page-loader";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nome é obrigatório" }),
@@ -90,7 +91,7 @@ export default function UsersPage() {
             );
         }
 
-        setUsers(usersArray.filter((user) => !user.role));
+        setUsers(usersArray.filter((user) => user.role !== "admin"));
         setLoading(false);
       } catch (error) {
         setLoading(false);
@@ -148,11 +149,7 @@ export default function UsersPage() {
   }
 
   if (status === "loading" || !session || loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <LoadingSpinner className="bg-dark" />
-      </div>
-    );
+    return <PageLoader label="Carregando usuários..." />;
   }
   if (session.user.role !== "admin") {
     router.push("/unauthorized");
@@ -163,14 +160,15 @@ export default function UsersPage() {
     <div>
       <ResponsiveMenu />
 
-      <div className="container mt-5">
-        <div className="flex flex-row justify-between items-center p-3 mb-4 border-b">
+      <main className="container py-8 md:py-10">
+        <div className="gov-page-heading">
           <h2 className="text-3xl font-semibold tracking-tight first:mt-0">
             Usuários
           </h2>
+          <p>Consulte estudantes cadastrados e a carga horária aprovada.</p>
         </div>
 
-        <Table className="border">
+        <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
@@ -180,7 +178,9 @@ export default function UsersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
+            {users.length === 0 ? (
+              <TableRow><TableCell colSpan={4} className="py-10 text-center text-[#555555]">Nenhum usuário encontrado.</TableCell></TableRow>
+            ) : users.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>{user.fullname}</TableCell>
                 <TableCell>{user.email}</TableCell>
@@ -192,7 +192,7 @@ export default function UsersPage() {
             ))}
           </TableBody>
         </Table>
-      </div>
+      </main>
       <AlertDialog open={alertVisible} onOpenChange={setAlertVisible}>
         <AlertDialogContent>
           <AlertDialogHeader>

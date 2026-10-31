@@ -19,12 +19,12 @@ const statuses: any = {
   "approved": "Aprovado",
   "processing": "Processando",
 }
-const statusesColors: any = {
-  "pending": "",
-  "rejected": "destructive",
-  "approved": "outline",
-  "processing": "secondary",
-}
+const statusClasses: Record<string, string> = {
+  pending: "border-[#ffcd07] bg-[#fff5c2] text-[#333333]",
+  rejected: "border-[#e52207] bg-[#fde0db] text-[#8b0a03]",
+  approved: "border-[#168821] bg-[#e3f5e1] text-[#0b4b3f]",
+  processing: "border-[#155bcb] bg-[#d4e5ff] text-[#0c326f]",
+};
 
 interface FilesTableProps {
   filesList: any[];
@@ -52,7 +52,7 @@ const FilesTable: React.FC<FilesTableProps> = ({
   setFilesList,
 }) => {
   return (
-    <Table className='border'>
+    <Table>
       <TableHeader>
         <TableRow>
           <TableHead>Nome</TableHead>
@@ -68,7 +68,7 @@ const FilesTable: React.FC<FilesTableProps> = ({
         {filesList.length > 0
           ? loading ? (
             <TableRow>
-              <TableCell colSpan={4} className="text-center">
+              <TableCell colSpan={7} className="py-10 text-center">
                 <div className=" flex align-center justify-center"><LoadingSpinner className="bg-dark" /></div>
               </TableCell>
             </TableRow>
@@ -79,14 +79,15 @@ const FilesTable: React.FC<FilesTableProps> = ({
                 <TableCell>{file.description ?? 'Sem Descrição'}</TableCell>
                 <TableCell>{file.completionDate ? new Date(file.completionDate).toLocaleDateString() : "Sem data de realização"}</TableCell>
                 <TableCell className="font-medium">{new Date(file.createdAt.seconds * 1000 + file.createdAt.nanoseconds / 1000000).toLocaleString()}</TableCell>
-                <TableCell>{file.workload}</TableCell>
+                <TableCell>{file.workload}h</TableCell>
                 <TableCell>
-                  <Badge variant={statusesColors[file.status]}>{statuses[file.status]}</Badge>
+                  <Badge variant="outline" className={statusClasses[file.status]}>{statuses[file.status] || file.status}</Badge>
                 </TableCell>
                 <TableCell>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
+                        aria-label={`Visualizar arquivo de ${file.name || "atividade"}`}
                         variant={"ghost"}
                         onClick={() => {
                           setPdfLoading(true);
@@ -104,8 +105,8 @@ const FilesTable: React.FC<FilesTableProps> = ({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={4} className="text-center">
-                Nenhum dado disponível
+              <TableCell colSpan={7} className="py-10 text-center text-[#555555]">
+                Nenhuma atividade cadastrada.
               </TableCell>
             </TableRow>
           )
