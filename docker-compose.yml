@@ -12,7 +12,7 @@ services:
     networks: [internal, proxy]
 
   postgres:
-    image: postgres:16.4-alpine
+    image: postgres:16.15-alpine
     restart: unless-stopped
     ports:
       - "127.0.0.1:5432:5432"
@@ -54,14 +54,14 @@ services:
     networks: [internal]
 
   mailpit:
-    image: axllent/mailpit:v1.20.3
+    image: axllent/mailpit:v1.31.6
     restart: unless-stopped
     ports:
       - "127.0.0.1:8025:8025"
     networks: [internal, proxy]
 
   reverse-proxy:
-    image: caddy:2.8.4-alpine
+    image: caddy:2.11.7-alpine
     restart: unless-stopped
     depends_on: [app]
     ports:

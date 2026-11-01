@@ -15,6 +15,7 @@ ensure_env() {
     echo "Arquivo .env criado a partir de .env.example."
     echo "Revise os segredos antes de usar este ambiente fora do desenvolvimento local."
   fi
+  chmod 600 .env
 }
 
 ensure_env

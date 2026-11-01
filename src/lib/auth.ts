@@ -13,11 +13,14 @@ export const authOptions: NextAuthOptions = {
   providers: [CredentialsProvider({
     name: "Credentials",
     credentials: { email: { label: "Email", type: "email" }, password: { label: "Senha", type: "password" } },
-    async authorize(credentials) {
+    async authorize(credentials, request) {
       if (!credentials?.email || !credentials.password) return null;
-      if (!rateLimit(`login:${credentials.email.toLowerCase()}`, 10, 15 * 60_000)) return null;
+      const forwardedFor = request.headers?.["x-forwarded-for"];
+      const ip = (Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor)?.split(",", 1)[0].trim() || "unknown";
+      const normalizedEmail = credentials.email.trim().toLowerCase();
+      if (!rateLimit(`login-ip:${ip}`, 30, 15 * 60_000) || !rateLimit(`login:${ip}:${normalizedEmail}`, 10, 15 * 60_000)) return null;
       const result = await query<{ id: string; email: string; password_hash: string; full_name: string; role: "student" | "admin"; email_verified_at: Date | null; session_version: number }>(
-        "SELECT id, email, password_hash, full_name, role, email_verified_at, session_version FROM users WHERE lower(email) = lower($1)", [credentials.email.trim()]);
+        "SELECT id, email, password_hash, full_name, role, email_verified_at, session_version FROM users WHERE email = $1", [normalizedEmail]);
       const user = result.rows[0];
       if (!user || !user.email_verified_at) return null;
       const { default: argon2 } = await import("argon2");

@@ -45,15 +45,18 @@ export const storage = {};
 export const getStorage = () => storage;
 export const ref = (_storage: unknown, path: string) => ({ path });
 export async function uploadBytes(reference: { path: string }, file: File) {
-  const response = await fetch("/api/storage/presign", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: reference.path, contentType: file.type, size: file.size }) });
+  const response = await fetch("/api/storage/presign", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contentType: file.type, size: file.size }) });
   if (!response.ok) {
     const body = await response.json().catch(() => null);
     throw new Error(body?.error || "Não foi possível preparar o envio do PDF");
   }
-  const { url } = await response.json();
-  const upload = await fetch(url, { method: "PUT", headers: { "Content-Type": "application/pdf" }, body: file });
+  const { url, fields, key } = await response.json() as { url: string; fields: Record<string, string>; key: string };
+  const form = new FormData();
+  for (const [name, value] of Object.entries(fields)) form.append(name, value);
+  form.append("file", file);
+  const upload = await fetch(url, { method: "POST", body: form });
   if (!upload.ok) throw new Error("Falha ao enviar o PDF");
-  return { ref: reference };
+  return { ref: { ...reference, path: key } };
 }
 export async function getDownloadURL(reference: { path: string }) {
   const response = await fetch(`/api/storage/url?key=${encodeURIComponent(reference.path)}`);

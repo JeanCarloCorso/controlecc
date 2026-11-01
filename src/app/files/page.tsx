@@ -8,13 +8,12 @@ import {
   where,
   getDocs,
   addDoc,
-  serverTimestamp,
 } from "@/lib/api-client";
 import { database as db, storage } from "@/lib/api-client";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { calculatePdfHash, getRandomFileName } from "@/lib/utils";
+import { calculatePdfHash } from "@/lib/utils";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "@/lib/api-client";
 import { useToast } from "@/hooks/use-toast";
 import withAuthorization from "@/components/with-authorization";
@@ -32,9 +31,7 @@ const formSchema = z.object({
   }),
   file: z.any().refine((files) => files?.length > 0, "Selecione um arquivo PDF."),
   workload: z.string().min(1, { message: "Carga horária é obrigatória" }).refine((value) => Number(value) > 0, "Informe uma carga horária maior que zero."),
-  completionDate: z.date({
-    required_error: "Data de realização é obrigatória",
-  }),
+  completionDate: z.date({ error: "Data de realização é obrigatória" }),
 });
 
 interface FileValidation {
@@ -42,10 +39,7 @@ interface FileValidation {
   description: string;
   workload: string;
   hashFile: string;
-  status: string;
-  userId: any;
   pathFile: string;
-  createdAt: any;
   completionDate: string;
 }
 
@@ -76,15 +70,13 @@ const FilesPage = () => {
     mode: "onBlur",
   });
 
-  const uploadFile = async (file: File, fileName: string, userId: any) => {
-    const pathFile = `${userId}/${fileName}.pdf`;
-
+  const uploadFile = async (file: File) => {
     const storage = getStorage();
-    const storageRef = ref(storage, pathFile);
+    const storageRef = ref(storage, "");
 
     try {
-      await uploadBytes(storageRef, file);
-      return pathFile;
+      const uploaded = await uploadBytes(storageRef, file);
+      return uploaded.ref.path;
     } catch (error) {
       console.error("Erro ao upload arquivo:", error);
       throw error; // rethrow the error to propagate it up the call stack
@@ -127,8 +119,6 @@ const FilesPage = () => {
           setSubmitting(true);
           const hash = await calculatePdfHash(selectedFile);
 
-          const fileName = await getRandomFileName();
-
           const filesCollectionRef = collection(db, "files");
 
           const q = query(filesCollectionRef, where("hashFile", "==", hash));
@@ -147,21 +137,14 @@ const FilesPage = () => {
             form.reset();
             return;
           } else {
-            const pathFile = await uploadFile(
-              selectedFile,
-              fileName,
-              session?.user.id
-            );
+            const pathFile = await uploadFile(selectedFile);
 
             const fileValidation: FileValidation = {
               name: values.name,
               description: values.description,
               workload: values.workload,
               hashFile: hash,
-              status: "pending",
-              userId: session?.user.id,
               pathFile,
-              createdAt: serverTimestamp(),
               completionDate: values.completionDate
                 ? values.completionDate.toISOString().split("T")[0]
                 : "",

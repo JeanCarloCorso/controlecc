@@ -38,7 +38,10 @@ Exporte usuários, cursos, projetos, tipos e atividades da instalação anterior
 ## Verificação
 
 ```bash
-npm install
+npm ci
+npm test
 npx tsc --noEmit
 npm run build
 ```
+
+Antes de publicar sobre uma base existente, aplique também `db/migrations/002_security_hardening.sql`. A migration impede que a mesma chave de objeto seja associada a mais de uma atividade.

@@ -442,7 +442,6 @@ const ValidationPage = () => {
           status: formValidation.status,
           observation: formValidation.observation || "Sem observação",
           workload: formValidation.workload,
-          userId: currentFile.userId,
         };
         await setDoc(fileRef, data, { merge: true });
         toast({

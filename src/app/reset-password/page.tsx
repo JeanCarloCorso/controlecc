@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -23,6 +23,7 @@ const formSchema = z.object({
 });
 
 function ResetPasswordContent() {
+  const router = useRouter();
   const token = useSearchParams().get("token");
   const [loading, setLoading] = useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
@@ -46,6 +47,7 @@ function ResetPasswordContent() {
       if (!response.ok) throw new Error(body.error || "Não foi possível alterar a senha");
       form.reset();
       toast({ title: "Senha alterada com sucesso", description: "Você já pode entrar com a nova senha." });
+      router.replace("/login");
     } catch (error) {
       toast({ variant: "destructive", title: "Não foi possível alterar a senha", description: error instanceof Error ? error.message : "Tente novamente em instantes." });
     } finally {

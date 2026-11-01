@@ -1,10 +1,10 @@
-FROM node:20.18.0-alpine AS deps
+FROM node:24.22.2-alpine AS deps
 WORKDIR /app
 RUN apk add --no-cache python3 make g++
 COPY package.json package-lock.json ./
 RUN npm ci
 
-FROM node:20.18.0-alpine AS builder
+FROM node:24.22.2-alpine AS builder
 WORKDIR /app
 ARG NEXT_PUBLIC_RECAPTCHA_SITE
 ENV NEXT_PUBLIC_RECAPTCHA_SITE=$NEXT_PUBLIC_RECAPTCHA_SITE
@@ -12,7 +12,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 
-FROM node:20.18.0-alpine AS runner
+FROM node:24.22.2-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 RUN apk add --no-cache libstdc++

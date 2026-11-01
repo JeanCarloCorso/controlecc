@@ -13,6 +13,7 @@ import { LoadingSpinner } from '@/components/ui/loader';
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { StatusBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
+import { formatDateOnlyPtBr } from "@/lib/date";
 
 
 interface FilesTableProps {
@@ -40,13 +41,14 @@ const FilesTable: React.FC<FilesTableProps> = ({
           <TableHead>Data de envio</TableHead>
           <TableHead>Carga horária</TableHead>
           <TableHead>Status</TableHead>
+          <TableHead>Observação do avaliador</TableHead>
           <TableHead className="w-[100px]">Arquivo</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {loading ? (
             <TableRow>
-              <TableCell colSpan={7} className="py-10 text-center">
+              <TableCell colSpan={8} className="py-10 text-center">
                 <div className="flex items-center justify-center gap-3" aria-live="polite"><LoadingSpinner /> Carregando atividades…</div>
               </TableCell>
             </TableRow>
@@ -55,11 +57,18 @@ const FilesTable: React.FC<FilesTableProps> = ({
               <TableRow key={file.pathFile}>
                 <TableCell>{file.name ?? 'Sem nome'}</TableCell>
                 <TableCell>{file.description ?? 'Sem Descrição'}</TableCell>
-                <TableCell>{file.completionDate ? new Date(`${file.completionDate}T00:00:00Z`).toLocaleDateString("pt-BR", { timeZone: "UTC" }) : "Não informada"}</TableCell>
+                <TableCell>{formatDateOnlyPtBr(file.completionDate)}</TableCell>
                 <TableCell className="font-medium">{file.createdAt?.seconds ? new Date(file.createdAt.seconds * 1000 + (file.createdAt.nanoseconds || 0) / 1000000).toLocaleString("pt-BR") : "Não informada"}</TableCell>
                 <TableCell>{file.workload}h</TableCell>
                 <TableCell>
                   <StatusBadge status={file.status} />
+                </TableCell>
+                <TableCell className="max-w-xs whitespace-normal">
+                  {typeof file.observation === "string" && file.observation.trim()
+                    ? file.observation
+                    : file.status === "pending"
+                      ? "Aguardando avaliação"
+                      : "Sem observação"}
                 </TableCell>
                 <TableCell>
                   <Tooltip>
@@ -83,7 +92,7 @@ const FilesTable: React.FC<FilesTableProps> = ({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={7} className="p-0"><EmptyState title="Nenhuma atividade cadastrada" description="Use o botão “Adicionar atividade” para enviar seu primeiro comprovante." /></TableCell>
+              <TableCell colSpan={8} className="p-0"><EmptyState title="Nenhuma atividade cadastrada" description="Use o botão “Adicionar atividade” para enviar seu primeiro comprovante." /></TableCell>
             </TableRow>
           )}
       </TableBody>

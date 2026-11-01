@@ -71,5 +71,6 @@ CREATE INDEX activities_user_id_idx ON activities(user_id);
 CREATE INDEX activities_status_archived_idx ON activities(status, archived);
 CREATE INDEX projects_course_id_idx ON projects(course_id);
 CREATE INDEX auth_tokens_lookup_idx ON auth_tokens(token_hash, purpose, expires_at) WHERE used_at IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS activities_file_key_unique_idx ON activities(file_key);
 
 INSERT INTO event_types(name) VALUES ('Curso'), ('Palestra'), ('Projeto') ON CONFLICT DO NOTHING;

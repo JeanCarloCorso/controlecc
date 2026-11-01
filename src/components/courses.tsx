@@ -36,7 +36,6 @@ import {
   query,
   getDocs,
   addDoc,
-  serverTimestamp,
   doc,
   setDoc,
   deleteDoc,
@@ -134,12 +133,7 @@ export default function Courses() {
         form.clearErrors();
         form.reset();
       } else {
-        let data: any = values;
-
-        data.projects = [];
-        data.createdAt = serverTimestamp();
-
-        await addDoc(collection(db, "courses"), data);
+        await addDoc(collection(db, "courses"), { name: values.name });
 
         toast({
           title: "Curso cadastrado",

@@ -31,7 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from './ui/button';
 import { Edit2Icon, Plus, Trash } from 'lucide-react';
 import { LoadingSpinner } from './ui/loader';
-import { collection, query, getDocs, addDoc, serverTimestamp, doc, setDoc, deleteDoc } from "@/lib/api-client";
+import { collection, query, getDocs, addDoc, doc, setDoc, deleteDoc } from "@/lib/api-client";
 import { database as db } from '@/lib/api-client';
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -125,13 +125,7 @@ export default function EventTypes() {
         form.reset();
 
       } else {
-
-
-        let data: any = values;
-
-        data.createdAt = serverTimestamp();
-
-        await addDoc(collection(db, "eventTypes"), data);
+        await addDoc(collection(db, "eventTypes"), { name: values.name });
 
         toast({
           title: "Tipo de evento cadastrado",
