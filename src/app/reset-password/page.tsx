@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { LoadingSpinner } from "@/components/ui/loader";
 import { toast } from "@/hooks/use-toast";
+import { InlineFeedback } from "@/components/inline-feedback";
 
 const formSchema = z.object({
   password: z.string().min(8, "A senha precisa ter no mínimo 8 caracteres"),
@@ -55,10 +56,13 @@ function ResetPasswordContent() {
   return (
     <div className="gov-auth-page">
       <GovPublicHeader />
-      <main className="gov-auth-main">
+      <main id="main-content" className="gov-auth-main">
         <Card className="gov-auth-card">
-          <CardHeader><p className="gov-eyebrow">Segurança da conta</p><CardTitle>Redefinir senha</CardTitle><CardDescription>Crie uma nova senha com no mínimo oito caracteres.</CardDescription></CardHeader>
+          <CardHeader><p className="gov-eyebrow">Segurança da conta</p><CardTitle as="h1">Redefinir senha</CardTitle><CardDescription>Crie uma nova senha com no mínimo oito caracteres.</CardDescription></CardHeader>
           <CardContent>
+            {!token ? (
+              <InlineFeedback variant="error" title="Link de redefinição inválido" description="O token está ausente. Solicite um novo link na página de entrada." />
+            ) : (
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                 <FormField control={form.control} name="password" render={({ field }) => (
@@ -67,9 +71,10 @@ function ResetPasswordContent() {
                 <FormField control={form.control} name="confirmPassword" render={({ field }) => (
                   <FormItem><FormLabel>Confirmação da nova senha</FormLabel><FormControl><Input type="password" autoComplete="new-password" placeholder="Confirme a nova senha" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
-                <Button className="w-full" type="submit" disabled={loading}>{loading ? <LoadingSpinner className="text-black" /> : "Salvar nova senha"}</Button>
+                <Button className="w-full" type="submit" disabled={loading}>{loading ? <><LoadingSpinner className="mr-2" /> Salvando…</> : "Salvar nova senha"}</Button>
               </form>
             </Form>
+            )}
             <Link className="mt-6 inline-block font-semibold underline" href="/login">Voltar para o login</Link>
           </CardContent>
         </Card>

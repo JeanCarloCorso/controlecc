@@ -19,7 +19,7 @@ export function GovPublicHeader() {
           Entrar
         </Link>
       </div>
-      <div className="h-1 bg-gradient-to-r from-[#1351b4] via-[#168821] to-[#ffcd07]" />
+      <div className="h-1 bg-[#1351b4]" />
     </header>
   );
 }
@@ -29,7 +29,7 @@ export function GovFooter() {
     <footer className="bg-[#071d41] text-white">
       <div className="container flex flex-col gap-1 py-5 text-sm sm:flex-row sm:items-center sm:justify-between">
         <strong>Controle CC</strong>
-        <span className="text-[#c5d4eb]">Instituto Federal Catarinense</span>
+        <span className="text-[#c5d4eb]">Instituto Federal Catarinense · Ciência da Computação</span>
       </div>
     </footer>
   );

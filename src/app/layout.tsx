@@ -26,6 +26,7 @@ export default function RootLayout({
           )
         }
       >
+        <a className="gov-skip-link" href="#main-content">Ir para o conteúdo principal</a>
         <ClientProviders>
           {children}
           <Toaster />

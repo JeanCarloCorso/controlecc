@@ -25,13 +25,16 @@ const ValidationFilters: React.FC<FiltersProps> = ({
 }) => {
   return (
     <>
-      <section className="mb-4 rounded-sm border border-[#adcdff] bg-[#edf5ff] p-4" aria-label="Filtros de atividades">
+      <section id="validation-filters" className="mb-5 rounded-sm border border-[#adcdff] bg-[#edf5ff] p-4" aria-labelledby="filters-title">
+      <h2 id="filters-title" className="mb-4 text-lg font-semibold">Filtrar atividades</h2>
       <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-1.5">
+        <Label id="status-filter-label">Situação</Label>
         <Select
           onValueChange={(value) => handleFilterChange("status", value)}
           value={filters.status}
         >
-          <SelectTrigger>
+          <SelectTrigger aria-labelledby="status-filter-label">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -42,30 +45,48 @@ const ValidationFilters: React.FC<FiltersProps> = ({
             <SelectItem value="archived">Arquivado</SelectItem>
           </SelectContent>
         </Select>
+        </div>
+        <div className="space-y-1.5">
+        <Label htmlFor="description-filter">Descrição</Label>
         <Input
-          placeholder="Descrição"
+          id="description-filter"
+          placeholder="Parte da descrição"
           value={filters.description}
           onChange={(e) => handleFilterChange("description", e.target.value)}
         />
+        </div>
+        <div className="space-y-1.5">
+        <Label htmlFor="student-filter">Nome do estudante</Label>
         <Input
+          id="student-filter"
           type="text"
-          placeholder="Nome do aluno"
+          placeholder="Parte do nome"
           value={filters.user}
           onChange={(e) => handleFilterChange("user", e.target.value)}
         />
+        </div>
+        <div className="space-y-1.5">
+        <Label htmlFor="date-filter">Data de envio</Label>
         <Input
+          id="date-filter"
           type="date"
-          placeholder="Data de envio"
           value={filters.createdAt}
           onChange={(e) => handleFilterChange("createdAt", e.target.value)}
         />
+        </div>
+        <div className="space-y-1.5">
+        <Label htmlFor="workload-filter">Carga horária</Label>
         <Input
-          placeholder="Carga Horária"
+          id="workload-filter"
+          type="number"
+          min="1"
+          placeholder="Quantidade de horas"
           value={filters.workload}
           onChange={(e) => handleFilterChange("workload", e.target.value)}
         />
+        </div>
 
-<div className="flex min-h-11 items-center gap-3 rounded-sm border border-[#cccccc] bg-white px-3">
+<div className="flex min-h-11 items-center gap-3 self-end rounded-sm border border-[#cccccc] bg-white px-3">
         <Checkbox id="includeArchived" checked={filters.includeArchived} onCheckedChange={value => handleFilterChange("includeArchived", value as boolean)} />
         <Label htmlFor="includeArchived">Incluir arquivados</Label>
       </div>
@@ -115,9 +136,9 @@ const ValidationFilters: React.FC<FiltersProps> = ({
           <Button
             onClick={clearAllFilters}
             className="min-h-8 px-3 py-1 text-xs font-medium"
-            variant={"destructive"}
+            variant="outline"
           >
-            Remover todos
+            Limpar todos os filtros
           </Button>
         )}
       </div>

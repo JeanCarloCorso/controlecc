@@ -1,486 +1,162 @@
-import React, { useState, useEffect } from 'react'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer"
+import React, { useCallback, useEffect, useState } from "react";
+import { Edit2Icon, Plus, Trash } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from './ui/button';
-import { Edit2Icon, Plus, Trash } from 'lucide-react';
-import { LoadingSpinner } from './ui/loader';
-import { collection, query, getDocs, doc, setDoc, deleteDoc } from "@/lib/api-client";
-import { database as db } from '@/lib/api-client';
+import { collection, database as db, doc, getDocs, query, setDoc } from "@/lib/api-client";
 import { useToast } from "@/hooks/use-toast";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { LoadingSpinner } from "@/components/ui/loader";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { EmptyState } from "@/components/empty-state";
+import { InlineFeedback } from "@/components/inline-feedback";
 
 const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Nome é obrigatório",
-  }),
-  year: z.string().min(4, {
-    message: "Ano é obrigatório",
-  }),
-  course: z.string().min(2, {
-    message: "Nome é obrigatório",
-  }),
+  name: z.string().trim().min(2, "Informe o nome do projeto"),
+  year: z.string().regex(/^\d{4}$/, "Informe o ano com quatro dígitos"),
 });
 
+type ProjectForm = z.infer<typeof formSchema>;
+type Project = ProjectForm & { uid: string; id?: string; course?: string };
+type Course = { id: string; name: string; projects: Project[] };
+
 export default function Projects() {
-  const [selectedCourse, setSelectedCourse] = useState({
-    name: "",
-    id: "",
-    projects: []
-  });
-  const [courses, setCourses] = useState<any[]>([]);
-  const [projects, setProjects] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [editing, setEditing] = useState({
-    status: false,
-    id: ""
-  });
-  const [drawerVisibleForm, setDrawerVisibleForm] = useState(false);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    async function getUserInfo() {
-      try {
-        const q = query(collection(db, "courses"));
-        const querySnapshot = await getDocs(q);
+  const form = useForm<ProjectForm>({ resolver: zodResolver(formSchema), defaultValues: { name: "", year: "" }, mode: "onBlur" });
 
-        if (querySnapshot.empty) {
-          return;
-        }
-
-        const arrayCourses: Array<any> = [];
-
-        let firstElement: any = querySnapshot.docs[0].data();
-        firstElement.id = querySnapshot.docs[0].id;
-
-        if(selectedCourse.name === ""){
-          if (firstElement) {
-            setSelectedCourse(firstElement);
-            setProjects(firstElement.projects)
-          }
-        }
-        querySnapshot.forEach((doc: any) => {
-          let course: any = doc.data()
-
-
-
-          course.id = doc.id
-
-          arrayCourses.push(course);
-        });
-
-
-        setCourses(arrayCourses);
-
-      } catch (error) {
-        console.error("Erro ao obter lista de arquivos:", error);
-      }
-    }
-    getUserInfo();
-
-  }, [drawerVisibleForm, alertVisible, selectedCourse.name]);
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      year: "",
-      course: ""
-    },
-    mode: "onBlur",
-  });
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  const loadCourses = useCallback(async () => {
+    setLoading(true);
+    setLoadError(false);
     try {
-      setLoading(true);
-
-      if(editing.status){
-        let lastProjects: any = selectedCourse?.projects;
-        let data: any = selectedCourse;
-        let currentId = editing.id;
-        
-
-        let arrayProjects:any = [];
-        lastProjects.map((item:any) => {
-          
-          let updateItem = item;
-
-          if(item.uid === currentId){
-            updateItem.name = values.name;
-            updateItem.year = values.year;            
-          }
-
-          arrayProjects.push(updateItem)
-        })
-  
-
-  
-        data.projects = arrayProjects;
-  
-  
-        const docRef = doc(db, "courses", selectedCourse.id)
-  
-        setDoc(docRef, data, {
-          merge: true
-        }).then(() => {
-          toast({
-            title: "Projeto atualizado com sucesso!",
-          })
-  
-          setLoading(false);
-          setDrawerVisibleForm(false);
-          form.clearErrors();
-          form.reset();
-  
-        })
-  
-        
-        setSelectedCourse(data)
-        setProjects(lastProjects)
-      
-
-      }else{
-      let projectData: any = values;
-      let lastProjects: any = selectedCourse?.projects;
-      let data: any = selectedCourse;
-
-      lastProjects.push(projectData);
-
-      data.projects = lastProjects;
-
-      const docRef = doc(db, "courses", selectedCourse.id)
-
-      await setDoc(docRef, data, {
-        merge: true
-      })
-
-      toast({
-        title: "Projeto adicionado com sucesso!",
-      })
-
+      const snapshot = await getDocs(query(collection(db, "courses")));
+      const nextCourses = snapshot.docs.map((item: any) => ({ ...item.data(), id: item.id, projects: item.data().projects || [] })) as Course[];
+      setCourses(nextCourses);
+      setSelectedCourse((current) => nextCourses.find((course) => course.id === current?.id) || nextCourses[0] || null);
+    } catch (error) {
+      console.error("Erro ao carregar projetos:", error);
+      setLoadError(true);
+    } finally {
       setLoading(false);
-      setDrawerVisibleForm(false);
-      form.clearErrors();
-      form.reset();
-
-      
-      setSelectedCourse(data)
-      setProjects(lastProjects)
     }
+  }, []);
 
-    } catch (e) {
-      
-      setLoading(false);
-      toast({
-        variant: "destructive",
-        title: "Falha ao cadastrar curso! Tente novamente.",
-      })
+  useEffect(() => { loadCourses(); }, [loadCourses]);
+
+  const openCreate = () => {
+    setProjectToEdit(null);
+    form.reset({ name: "", year: "" });
+    setDrawerOpen(true);
+  };
+
+  const openEdit = (project: Project) => {
+    setProjectToEdit(project);
+    form.reset({ name: project.name, year: String(project.year) });
+    setDrawerOpen(true);
+  };
+
+  async function saveProjects(nextProjects: Project[]) {
+    if (!selectedCourse) return;
+    await setDoc(doc(db, "courses", selectedCourse.id), { projects: nextProjects }, { merge: true });
+  }
+
+  async function onSubmit(values: ProjectForm) {
+    if (!selectedCourse) return;
+    setSaving(true);
+    try {
+      const nextProjects = projectToEdit
+        ? selectedCourse.projects.map((project) => project.uid === projectToEdit.uid ? { ...project, ...values } : project)
+        : [...selectedCourse.projects, { ...values, uid: crypto.randomUUID(), course: selectedCourse.name }];
+      await saveProjects(nextProjects);
+      toast({ title: projectToEdit ? "Projeto atualizado" : "Projeto adicionado", description: `As alterações em ${selectedCourse.name} foram salvas.` });
+      setDrawerOpen(false);
+      await loadCourses();
+    } catch (error) {
+      console.error("Erro ao salvar projeto:", error);
+      toast({ variant: "destructive", title: "Não foi possível salvar o projeto", description: "Revise os dados e tente novamente." });
+    } finally {
+      setSaving(false);
     }
-
   }
 
   async function onDelete() {
+    if (!selectedCourse || !projectToDelete) return;
+    setSaving(true);
     try {
-      let docRef = doc(db, 'courses', editing.id);
-
-      await deleteDoc(docRef)
-        .then(() => {
-          setAlertVisible(false);
-
-          toast({
-            title: "Curso deletado com sucesso!",
-          });
-
-          setLoading(false)
-        })
-
-
+      await saveProjects(selectedCourse.projects.filter((project) => project.uid !== projectToDelete.uid));
+      toast({ title: "Projeto excluído", description: "O projeto foi removido do curso selecionado." });
+      setProjectToDelete(null);
+      await loadCourses();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Falha ao excluir curso! Tente novamente",
-      });
-
-      setAlertVisible(false);
+      console.error("Erro ao excluir projeto:", error);
+      toast({ variant: "destructive", title: "Não foi possível excluir o projeto", description: "Tente novamente em alguns instantes." });
+    } finally {
+      setSaving(false);
     }
   }
 
   return (
     <div className="flex w-full flex-col items-stretch pt-4">
+      {loadError ? <div className="mb-4"><InlineFeedback variant="error" title="Não foi possível carregar os projetos" description="Atualize a página ou tente novamente em alguns instantes." /></div> : null}
 
-      <div className="flex flex-col gap-3 pb-3 sm:flex-row sm:justify-end">
-        <Select
-          onValueChange={(value) => {
-            let selected = courses.filter((val) => val.id === value)[0];
-            
-
-            setSelectedCourse(selected)
-            setProjects(selected.projects)
-
-          }}
-        >
-          <SelectTrigger className="w-full sm:w-[220px]">
-            <SelectValue
-              defaultValue={selectedCourse.id}
-              placeholder={selectedCourse.name}
-            />
-          </SelectTrigger>
-          <SelectContent>
-            {
-              courses.map((course) => (
-                <SelectItem
-                  key={course.id}
-
-
-                  onSelect={() => {
-                    setProjects(course.projects);
-
-                  }}
-                  value={course.id}
-                >
-                  {course.name}
-                </SelectItem>
-              ))
-            }
-
-          </SelectContent>
-        </Select>
-
-
-        <Button
-          className="w-full sm:w-auto"
-          variant={"default"}
-          onClick={(e) => {
-            e.preventDefault();
-
-            form.setValue("course", selectedCourse.name)
-            setDrawerVisibleForm(true)
-          }}
-        >
-          <Plus size={16} />
-
-          Adicionar projeto
-        </Button>
-
+      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="w-full space-y-1.5 sm:w-[280px]">
+          <Label id="course-select-label">Curso</Label>
+          <Select value={selectedCourse?.id || ""} onValueChange={(value) => setSelectedCourse(courses.find((course) => course.id === value) || null)}>
+            <SelectTrigger aria-labelledby="course-select-label"><SelectValue placeholder="Selecione um curso" /></SelectTrigger>
+            <SelectContent>{courses.map((course) => <SelectItem key={course.id} value={course.id}>{course.name}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        <Button onClick={openCreate} disabled={!selectedCourse || loading}><Plus className="mr-2" size={16} aria-hidden="true" /> Adicionar projeto</Button>
       </div>
 
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="">Nome</TableHead>
-            <TableHead>Ano</TableHead>
-            <TableHead>Ações</TableHead>
-          </TableRow>
-        </TableHeader>
+        <TableHeader><TableRow><TableHead>Nome</TableHead><TableHead>Ano</TableHead><TableHead>Ações</TableHead></TableRow></TableHeader>
         <TableBody>
-          {
-            projects?.length === 0 ?
-
-              <TableRow>
-                <TableCell colSpan={4} className="text-center">
-                  Nenhum projeto cadastrado para este curso.
-                </TableCell>
-              </TableRow>
-              :
-              projects?.map((project: any) => (
-                <TableRow key={project.name}>
-                  <TableCell>
-                    {project.name}
-                  </TableCell>
-
-                  <TableCell>
-                    {project.year}
-                  </TableCell>
-
-                  <TableCell>
-                    <div>
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          form.setValue("course", selectedCourse.name)
-                          form.setValue("name", project.name);
-                          form.setValue("year", project.year);
-                          setEditing({
-                            status: true,
-                            id: project.uid
-                          })
-                          setDrawerVisibleForm(true)
-                        }}
-                      >
-                        <Edit2Icon size={14} />
-                      </Button>
-
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          setAlertVisible(true)
-                          setEditing({
-                            status: false,
-                            id: project.id
-                          })
-                        }}
-                      >
-                        <Trash size={14} />
-                      </Button>
-
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-          }
+          {loading ? (
+            <TableRow><TableCell colSpan={3} className="py-10"><span className="flex items-center justify-center gap-3" aria-live="polite"><LoadingSpinner /> Carregando projetos…</span></TableCell></TableRow>
+          ) : !selectedCourse || selectedCourse.projects.length === 0 ? (
+            <TableRow><TableCell colSpan={3} className="p-0"><EmptyState title="Nenhum projeto cadastrado" description={selectedCourse ? `Adicione o primeiro projeto de ${selectedCourse.name}.` : "Cadastre um curso antes de adicionar projetos."} /></TableCell></TableRow>
+          ) : selectedCourse.projects.map((project) => (
+            <TableRow key={project.uid}>
+              <TableCell>{project.name}</TableCell><TableCell>{project.year}</TableCell>
+              <TableCell><div className="flex flex-wrap gap-1">
+                <Button size="sm" variant="ghost" onClick={() => openEdit(project)}><Edit2Icon className="mr-2" size={16} aria-hidden="true" /> Editar</Button>
+                <Button size="sm" variant="ghost" className="text-[#b50909]" onClick={() => setProjectToDelete(project)}><Trash className="mr-2" size={16} aria-hidden="true" /> Excluir</Button>
+              </div></TableCell>
+            </TableRow>
+          ))}
         </TableBody>
       </Table>
 
-      <AlertDialog
-        open={alertVisible}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir este projeto?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => { setAlertVisible(false) }}
-            >Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault()
-                onDelete()
-              }}
-            >
-              Excluir projeto
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
+      <AlertDialog open={Boolean(projectToDelete)} onOpenChange={(open) => { if (!open) setProjectToDelete(null); }}>
+        <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Excluir projeto?</AlertDialogTitle><AlertDialogDescription>O projeto “{projectToDelete?.name}” será removido de {selectedCourse?.name}. Esta ação não pode ser desfeita.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-destructive text-white hover:bg-[#b50909]" disabled={saving} onClick={onDelete}>{saving ? "Excluindo…" : "Excluir projeto"}</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
       </AlertDialog>
 
-      <Drawer
-        open={drawerVisibleForm}
-        onOpenChange={setDrawerVisibleForm}
-      >
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>{editing.status ? "Editar projeto" : "Adicionar projeto"}</DrawerTitle>
-          </DrawerHeader>
-          <div className='overflow-y-auto px-4 pb-5 sm:px-6'>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
-                <FormField
-                  control={form.control}
-                  name="course"
-                  render={({ field, fieldState }) => (
-                    <FormItem>
-                      <FormLabel>Curso </FormLabel>
-                      <FormControl>
-                        <Input
-                          disabled={true}
-                          placeholder=""
-                          className={fieldState.error ? "text-color-red" : ""}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field, fieldState }) => (
-                    <FormItem>
-                      <FormLabel>Nome do projeto </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Digite o nome do projeto"
-                          className={fieldState.error ? "text-color-red" : ""}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="year"
-                  render={({ field, fieldState }) => (
-                    <FormItem>
-                      <FormLabel>Ano do projeto </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Digite o ano do projeto"
-                          className={fieldState.error ? "text-color-red" : ""}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <DrawerFooter className="m-0 flex flex-col-reverse gap-2 p-0 sm:flex-row sm:justify-end">
-                  <DrawerClose asChild>
-                    <Button type="button" variant="outline">Cancelar</Button>
-                  </DrawerClose>
-                  <Button type="submit" disabled={loading}>
-                    {loading ? <LoadingSpinner /> : editing.status ? "Salvar alterações" : "Adicionar projeto"}
-                  </Button>
-                </DrawerFooter>
-              </form>
-
-            </Form>
-          </div>
-
+      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <DrawerContent><DrawerHeader><DrawerTitle>{projectToEdit ? "Editar projeto" : "Adicionar projeto"}</DrawerTitle><DrawerDescription>Os campos marcados como obrigatórios devem ser preenchidos.</DrawerDescription></DrawerHeader>
+          <div className="overflow-y-auto px-4 pb-5 sm:px-6"><Form {...form}><form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormItem><FormLabel>Curso</FormLabel><Input value={selectedCourse?.name || ""} disabled /></FormItem>
+            <FormField control={form.control} name="name" render={({ field }) => <FormItem><FormLabel>Nome do projeto <span className="text-[#b50909]">(obrigatório)</span></FormLabel><FormControl><Input placeholder="Ex.: Projeto de extensão" {...field} /></FormControl><FormMessage /></FormItem>} />
+            <FormField control={form.control} name="year" render={({ field }) => <FormItem><FormLabel>Ano <span className="text-[#b50909]">(obrigatório)</span></FormLabel><FormControl><Input inputMode="numeric" maxLength={4} placeholder="Ex.: 2026" {...field} /></FormControl><FormMessage /></FormItem>} />
+            <DrawerFooter className="m-0 flex flex-col-reverse gap-2 p-0 sm:flex-row sm:justify-end"><DrawerClose asChild><Button type="button" variant="outline">Cancelar</Button></DrawerClose><Button type="submit" disabled={saving}>{saving ? <><LoadingSpinner className="mr-2" /> Salvando…</> : "Salvar projeto"}</Button></DrawerFooter>
+          </form></Form></div>
         </DrawerContent>
       </Drawer>
-
     </div>
-  )
+  );
 }

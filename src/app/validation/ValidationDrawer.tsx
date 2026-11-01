@@ -1,10 +1,12 @@
 import React from "react";
-import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { LoadingSpinner } from '@/components/ui/loader';
+import { Textarea } from "@/components/ui/textarea";
+import { InlineFeedback } from "@/components/inline-feedback";
 
 interface ValidationDrawerProps {
   drawerVisibleView: boolean;
@@ -29,16 +31,16 @@ const ValidationDrawer: React.FC<ValidationDrawerProps> = ({
 }) => {
   return (
     <Drawer open={drawerVisibleView} onOpenChange={setDrawerVisibleView}>
-      <DrawerTrigger asChild></DrawerTrigger>
       <DrawerContent className="h-[92dvh]">
         <DrawerHeader>
           <DrawerTitle className="text-xl font-bold">Validar atividade</DrawerTitle>
-          {currentFile?.user?.fullname && <p className="text-sm text-[#555555]">Documento enviado por <strong>{currentFile.user.fullname}</strong></p>}
+          <DrawerDescription>{currentFile?.user?.fullname ? <>Documento enviado por <strong>{currentFile.user.fullname}</strong>.</> : "Revise o documento e registre sua decisão."}</DrawerDescription>
         </DrawerHeader>
         <div className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-y-auto p-4 lg:flex-row lg:overflow-hidden">
           <div className="flex w-full shrink-0 flex-col gap-3 lg:w-1/4 lg:overflow-y-auto">
             <Label htmlFor="workload">Carga horária aprovada</Label>
             <Input
+              id="workload"
               type="number"
               min="1"
               placeholder="Carga Horária"
@@ -50,7 +52,7 @@ const ValidationDrawer: React.FC<ValidationDrawerProps> = ({
               onValueChange={(value) => setFormValidation({ ...formValidation, status: value })}
               value={formValidation.status}
             >
-              <SelectTrigger>
+              <SelectTrigger id="status">
                 <SelectValue placeholder="Selecione o status" />
               </SelectTrigger>
               <SelectContent>
@@ -60,8 +62,8 @@ const ValidationDrawer: React.FC<ValidationDrawerProps> = ({
               </SelectContent>
             </Select>
             <Label htmlFor="observation">Observação para o estudante</Label>
-            <Input
-              type="text"
+            <Textarea
+              id="observation"
               placeholder="Explique a decisão ou informe os ajustes necessários"
               value={formValidation.observation}
               onChange={(e) => setFormValidation({ ...formValidation, observation: e.target.value })}
@@ -76,10 +78,12 @@ const ValidationDrawer: React.FC<ValidationDrawerProps> = ({
                 title="PDF Viewer"
                 loading="lazy"
               />
-            ) : (
+            ) : pdfLoading ? (
               <div className="h-full w-full flex justify-center items-center">
-                <LoadingSpinner className="bg-dark" />
+                <span className="flex items-center gap-3" aria-live="polite"><LoadingSpinner /> Carregando documento…</span>
               </div>
+            ) : (
+              <div className="max-w-md p-5"><InlineFeedback variant="error" title="Não foi possível exibir o documento" description="Feche esta janela e tente abrir a atividade novamente." /></div>
             )}
           </div>
         </div>
@@ -99,7 +103,7 @@ const ValidationDrawer: React.FC<ValidationDrawerProps> = ({
                 setAlertVisible({ visible: true, id: currentFile.id });
               }}
             >
-              Salvar
+              Revisar e salvar
             </Button>
         </DrawerFooter>
       </DrawerContent>

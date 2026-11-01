@@ -15,7 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { signIn } from 'next-auth/react';
+import { getSession, signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import {
   Card,
@@ -30,7 +30,7 @@ import PasswordResetComponent from "@/components/password-reset";
 import { GovFooter, GovPublicHeader } from "@/components/gov-public-header";
 
 const formSchema = z.object({
-  email: z.string().email({ message: "Email inválido" }),
+  email: z.string().email({ message: "Informe um e-mail válido" }),
   password: z.string().min(6, {
     message: "A senha precisa ter no mínimo 6 caracteres",
   }),
@@ -74,14 +74,16 @@ export default function LoginPage() {
         setLoading(false);
         toast({
           title: 'Erro ao criar sessão',
-          description: "Email ou senha incorretos! Tente novamente.",
+            description: "E-mail ou senha incorretos. Confira os dados e tente novamente.",
           variant: 'destructive',
         })
       } else {
         // toast({
         //   title: 'Sessão criada com sucesso',
         // })
-        router.push('/dashboard');
+        const session = await getSession();
+        router.push(session?.user?.role === "admin" ? "/dashboard" : "/myprogress");
+        router.refresh();
       }
     } catch (error: any) {
 
@@ -98,11 +100,11 @@ export default function LoginPage() {
   return (
     <div className="gov-auth-page">
       <GovPublicHeader />
-      <main className="gov-auth-main">
+      <main id="main-content" className="gov-auth-main">
       <Card className="gov-auth-card">
         <CardHeader>
           <p className="gov-eyebrow">Acesso ao sistema</p>
-          <CardTitle>Entrar</CardTitle>
+          <CardTitle as="h1">Entrar</CardTitle>
           <CardDescription>Informe seus dados para acessar o Controle CC.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -114,12 +116,12 @@ export default function LoginPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>E-mail</FormLabel>
                     <FormControl>
                       <Input
                         type="email"
                         autoComplete="email"
-                        placeholder="Digite seu email"
+                        placeholder="nome@exemplo.com"
                         {...field}
                       />
                     </FormControl>
@@ -147,12 +149,12 @@ export default function LoginPage() {
                 )}
               />
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? <LoadingSpinner className="text-black"/> : "Entrar"}
+                {loading ? <><LoadingSpinner className="mr-2"/> Entrando…</> : "Entrar"}
               </Button>
               <div className="flex w-full flex-col items-center justify-between gap-2 sm:flex-row">
               
               <PasswordResetComponent />
-              <Button type="button" className="px-5 py-0" style={{ marginTop: 5 }} variant={"ghost"} onClick={() => router.push('/register')}>
+              <Button type="button" variant="ghost" onClick={() => router.push('/register')}>
                 Criar conta
               </Button>
 

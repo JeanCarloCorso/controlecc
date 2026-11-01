@@ -25,16 +25,16 @@ const ValidationArchiveDialog: React.FC<ValidationArchiveDialogProps> = ({
     <AlertDialog open={showArchiveDialog}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Arquivar arquivo</AlertDialogTitle>
+          <AlertDialogTitle>Arquivar atividade</AlertDialogTitle>
           <AlertDialogDescription>
-            Tem certeza que deseja arquivar este arquivo? Ele não aparecerá mais na listagem padrão.
+            A atividade deixará de aparecer na listagem padrão, mas continuará disponível nos filtros de arquivadas.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={() => setShowArchiveDialog(false)}>
             Cancelar
           </AlertDialogCancel>
-          <AlertDialogAction onClick={handleArchiveFile}>
+          <AlertDialogAction className="bg-destructive text-white hover:bg-[#b50909]" onClick={handleArchiveFile}>
             Arquivar
           </AlertDialogAction>
         </AlertDialogFooter>
@@ -43,4 +43,4 @@ const ValidationArchiveDialog: React.FC<ValidationArchiveDialogProps> = ({
   );
 };
 
-export default React.memo(ValidationArchiveDialog); 
+export default React.memo(ValidationArchiveDialog);

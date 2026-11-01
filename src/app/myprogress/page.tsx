@@ -13,9 +13,12 @@ import {
 } from "@/components/ui/card";
 import withAuthorization from "@/components/with-authorization";
 import { PageLoader } from "@/components/page-loader";
+import { PageHeader } from "@/components/page-header";
+import { InlineFeedback } from "@/components/inline-feedback";
 
 const ProgressPage = () => {
   const [myWorkload, setMyWorkload] = useState(0);
+  const [loadError, setLoadError] = useState(false);
   const { data: session, status } = useSession();
 
   useEffect(() => {
@@ -25,6 +28,7 @@ const ProgressPage = () => {
       }
 
       try {
+        setLoadError(false);
         const q = query(
           collection(db, "files"),
           where("userId", "==", session.user.id)
@@ -49,6 +53,7 @@ const ProgressPage = () => {
         setMyWorkload(workloadCompleted);
       } catch (error) {
         console.error("Erro ao obter lista de arquivos:", error);
+        setLoadError(true);
       }
     }
     getUserInfo();
@@ -61,13 +66,9 @@ const ProgressPage = () => {
   return (
     <div>
       <ResponsiveMenu />
-      <main className="container py-8 md:py-10">
-        <div className="gov-page-heading">
-          <h2 className="text-3xl font-semibold tracking-tight first:mt-0">
-            Meu progresso
-          </h2>
-          <p>Consulte a carga horária aprovada nas suas atividades complementares.</p>
-        </div>
+      <main id="main-content" className="container py-8 md:py-10">
+        <PageHeader eyebrow="Atividades complementares" title="Meu progresso" description="Consulte a carga horária aprovada nas suas atividades complementares." />
+        {loadError ? <div className="mb-5"><InlineFeedback variant="error" title="Não foi possível calcular seu progresso" description="Atualize a página ou tente novamente em alguns instantes." /></div> : null}
         <Card className="max-w-3xl overflow-hidden border-t-4 border-t-[#168821]">
           <CardHeader>
             <CardTitle>Horas aprovadas</CardTitle>

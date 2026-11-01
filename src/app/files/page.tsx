@@ -22,6 +22,8 @@ import FilesTable from "@/components/files/FilesTable";
 import FileUploadDrawer from "@/components/files/FileUploadDrawer";
 import FileViewDrawer from "@/components/files/FileViewDrawer";
 import { PageLoader } from "@/components/page-loader";
+import { PageHeader } from "@/components/page-header";
+import { InlineFeedback } from "@/components/inline-feedback";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nome é obrigatório" }),
@@ -52,6 +54,8 @@ const MAX_PDF_SIZE = 5 * 1024 * 1024;
 const FilesPage = () => {
   const [filesList, setFilesList] = useState<any>([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(true);
   const [drawerVisibleForm, setDrawerVisibleForm] = useState(false);
   const [drawerVisibleView, setDrawerVisibleView] = useState(false);
@@ -120,7 +124,7 @@ const FilesPage = () => {
             return;
           }
 
-          setLoading(true);
+          setSubmitting(true);
           const hash = await calculatePdfHash(selectedFile);
 
           const fileName = await getRandomFileName();
@@ -137,7 +141,7 @@ const FilesPage = () => {
               description:
                 "Escolha outro comprovante para evitar atividades duplicadas.",
             });
-            setLoading(false);
+            setSubmitting(false);
             setDrawerVisibleForm(false);
             form.clearErrors();
             form.reset();
@@ -170,7 +174,7 @@ const FilesPage = () => {
               description: "O documento foi recebido e aguarda validação.",
             });
 
-            setLoading(false);
+            setSubmitting(false);
             setDrawerVisibleForm(false);
             form.clearErrors();
             form.reset();
@@ -191,13 +195,14 @@ const FilesPage = () => {
         description: message,
       });
       console.error("Erro ao registrar:", error);
-      setLoading(false);
+      setSubmitting(false);
     }
   }
 
   useEffect(() => {
     async function getAllFiles() {
       setLoading(true);
+      setLoadError(false);
       if (!session) {
         return;
       }
@@ -228,6 +233,7 @@ const FilesPage = () => {
       } catch (error) {
         console.error("Erro ao obter lista de arquivos:", error);
         setLoading(false);
+        setLoadError(true);
         toast({ variant: "destructive", title: "Não foi possível carregar as atividades", description: "Atualize a página ou tente novamente mais tarde." });
       }
     }
@@ -239,6 +245,8 @@ const FilesPage = () => {
       return;
     }
 
+    setPdfUrl(null);
+    setPdfLoading(true);
     const pdfRef = ref(storage, pdfPath);
 
     getDownloadURL(pdfRef)
@@ -265,22 +273,20 @@ const FilesPage = () => {
     return (
       <div>
         <ResponsiveMenu />
-        <main className="container py-8 md:py-10">
-          <div className="gov-page-heading flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-            <div>
-            <h2 className="text-3xl font-semibold tracking-tight first:mt-0">
-              Atividades
-            </h2>
-            <p>Envie comprovantes e acompanhe a situação das suas atividades.</p>
-            </div>
-            <FileUploadDrawer
+        <main id="main-content" className="container py-8 md:py-10">
+          <PageHeader
+            eyebrow="Atividades complementares"
+            title="Minhas atividades"
+            description="Envie comprovantes e acompanhe a análise das suas atividades complementares."
+            actions={<FileUploadDrawer
               drawerVisibleForm={drawerVisibleForm}
               setDrawerVisibleForm={setDrawerVisibleForm}
               form={form}
               onSubmit={onSubmit}
-              loading={loading}
-            />
-          </div>
+              loading={submitting}
+            />}
+          />
+          {loadError ? <div className="mb-5"><InlineFeedback variant="error" title="Não foi possível carregar suas atividades" description="Atualize a página ou tente novamente em alguns instantes." /></div> : null}
           <FilesTable
             filesList={filesList}
             loading={loading}

@@ -9,6 +9,7 @@ import Courses from '@/components/courses'
 import Projects from '@/components/projects';
 import EventTypes from '@/components/event-types';
 import { PageLoader } from '@/components/page-loader';
+import { PageHeader } from '@/components/page-header';
 
 const AdminPanelPage = () => {
   const { data: session, status } = useSession();
@@ -21,13 +22,8 @@ const AdminPanelPage = () => {
   return (
     <div>
       <ResponsiveMenu />
-      <main className="container py-8 md:py-10">
-        <div className="gov-page-heading">
-          <h2 className="text-3xl font-semibold tracking-tight first:mt-0">
-            Painel administrativo
-          </h2>
-          <p>Gerencie cursos, projetos e tipos de evento usados no cadastro de atividades.</p>
-        </div>
+      <main id="main-content" className="container py-8 md:py-10">
+        <PageHeader eyebrow="Administração" title="Configurações acadêmicas" description="Gerencie os cursos, projetos e tipos de evento usados no cadastro de atividades." />
         <Tabs defaultValue="courses" className="w-full pb-4">
           <TabsList className="flex h-auto w-full justify-start overflow-x-auto">
             <TabsTrigger value="courses">Cursos</TabsTrigger>

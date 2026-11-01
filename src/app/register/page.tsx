@@ -40,7 +40,7 @@ const formSchema = z
     registrationNumber: z.string().min(2, {
       message: "Matrícula é obrigatória",
     }),
-    email: z.string().email({ message: "Email inválido" }),
+    email: z.string().email({ message: "Informe um e-mail válido" }),
     password: z.string().min(8, {
       message: "A senha precisa ter no mínimo 8 caracteres",
     }),
@@ -119,11 +119,11 @@ export default function RegisterPage() {
   return (
     <div className="gov-auth-page">
       <GovPublicHeader />
-      <main className="gov-auth-main py-10">
+      <main id="main-content" className="gov-auth-main py-10">
       <Card className="gov-auth-card">
         <CardHeader>
           <p className="gov-eyebrow">Primeiro acesso</p>
-          <CardTitle>Criar conta</CardTitle>
+          <CardTitle as="h1">Criar conta</CardTitle>
           <CardDescription>Preencha seus dados acadêmicos para iniciar o cadastro.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -135,7 +135,7 @@ export default function RegisterPage() {
                 name="fullname"
                 render={({ field, fieldState }) => (
                   <FormItem>
-                    <FormLabel>Nome Completo</FormLabel>
+                    <FormLabel>Nome completo</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Digite seu nome completo"
@@ -166,12 +166,12 @@ export default function RegisterPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>E-mail</FormLabel>
                     <FormControl>
                       <Input
                         type="email"
                         autoComplete="email"
-                        placeholder="Digite seu email"
+                        placeholder="nome@exemplo.com"
                         {...field}
                       />
                     </FormControl>
@@ -202,7 +202,7 @@ export default function RegisterPage() {
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Confirmação de Senha</FormLabel>
+                    <FormLabel>Confirmação de senha</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
@@ -225,7 +225,7 @@ export default function RegisterPage() {
               )}
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? <LoadingSpinner className="text-black" /> : "Registrar"}
+                {loading ? <><LoadingSpinner className="mr-2" /> Criando conta…</> : "Criar conta"}
               </Button>
 
               <Button

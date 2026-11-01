@@ -11,6 +11,7 @@ import {
   Drawer,
   DrawerClose,
   DrawerContent,
+  DrawerDescription,
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
@@ -52,6 +53,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { EmptyState } from "@/components/empty-state";
+import { InlineFeedback } from "@/components/inline-feedback";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -62,6 +65,8 @@ const formSchema = z.object({
 export default function Courses() {
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
   const [editing, setEditing] = useState({
     status: false,
@@ -72,11 +77,14 @@ export default function Courses() {
 
   useEffect(() => {
     async function getUserInfo() {
+      setInitialLoading(true);
+      setLoadError(false);
       try {
         const q = query(collection(db, "courses"));
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
+          setCourses([]);
           return;
         }
 
@@ -89,6 +97,9 @@ export default function Courses() {
         setCourses(arrayCourses);
       } catch (error) {
         console.error("Erro ao obter lista de arquivos:", error);
+        setLoadError(true);
+      } finally {
+        setInitialLoading(false);
       }
     }
     getUserInfo();
@@ -109,7 +120,7 @@ export default function Courses() {
       if (editing.status) {
         const docRef = doc(db, "courses", editing.id);
 
-        setDoc(
+        await setDoc(
           docRef,
           {
             name: values.name,
@@ -117,16 +128,11 @@ export default function Courses() {
           {
             merge: true,
           }
-        ).then(() => {
-          toast({
-            title: "Curso atualizado com sucesso!",
-          });
-
-          setLoading(false);
-          setDrawerVisibleForm(false);
-          form.clearErrors();
-          form.reset();
-        });
+        );
+        toast({ title: "Curso atualizado", description: "As alterações foram salvas com sucesso." });
+        setDrawerVisibleForm(false);
+        form.clearErrors();
+        form.reset();
       } else {
         let data: any = values;
 
@@ -136,54 +142,58 @@ export default function Courses() {
         await addDoc(collection(db, "courses"), data);
 
         toast({
-          title: "Curso cadastrado com sucesso!",
+          title: "Curso cadastrado",
+          description: "O curso já está disponível para receber projetos.",
         });
 
-        setLoading(false);
         setDrawerVisibleForm(false);
         form.clearErrors();
         form.reset();
       }
     } catch (e) {
-      setLoading(false);
       toast({
         variant: "destructive",
-        title: "Falha ao cadastrar curso! Tente novamente.",
+        title: "Não foi possível salvar o curso",
+        description: "Revise os dados e tente novamente.",
       });
+    } finally {
+      setLoading(false);
     }
   }
 
   async function onDelete() {
+    setLoading(true);
     try {
       let docRef = doc(db, "courses", editing.id);
-
-      await deleteDoc(docRef).then(() => {
-        setAlertVisible(false);
-        toast({
-          title: "Curso deletado com sucesso!",
-        });
-        setLoading(false);
-      });
+      await deleteDoc(docRef);
+      setAlertVisible(false);
+      toast({ title: "Curso excluído", description: "O curso e seus projetos foram removidos." });
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Falha ao excluir curso! Tente novamente",
+        title: "Não foi possível excluir o curso",
+        description: "Verifique se o curso está em uso e tente novamente.",
       });
 
       setAlertVisible(false);
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
     <div className="flex w-full flex-col items-stretch pt-4">
+      {loadError ? <div className="mb-4"><InlineFeedback variant="error" title="Não foi possível carregar os cursos" description="Atualize a página ou tente novamente em alguns instantes." /></div> : null}
       <div className="flex justify-end pb-3">
         <Button
           variant={"default"}
           onClick={() => {
+            setEditing({ status: false, id: "" });
+            form.reset({ name: "" });
             setDrawerVisibleForm(true);
           }}
         >
-          <Plus size={16} />
+          <Plus className="mr-2" size={16} aria-hidden="true" />
           Adicionar curso
         </Button>
       </div>
@@ -197,8 +207,8 @@ export default function Courses() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {courses?.length === 0 ? <TableRow><TableCell colSpan={3} className="py-10 text-center text-[#555555]">Nenhum curso cadastrado.</TableCell></TableRow> : courses?.map((course: any) => (
-            <TableRow key={course.name}>
+          {initialLoading ? <TableRow><TableCell colSpan={3} className="py-10"><span className="flex items-center justify-center gap-3" aria-live="polite"><LoadingSpinner /> Carregando cursos…</span></TableCell></TableRow> : courses?.length === 0 ? <TableRow><TableCell colSpan={3} className="p-0"><EmptyState title="Nenhum curso cadastrado" description="Adicione o primeiro curso para organizar seus projetos." /></TableCell></TableRow> : courses?.map((course: any) => (
+            <TableRow key={course.id}>
               <TableCell>{course.name}</TableCell>
               <TableCell>
                 {course?.projects?.length === 0
@@ -219,12 +229,13 @@ export default function Courses() {
                       setDrawerVisibleForm(true);
                     }}
                   >
-                    <Edit2Icon size={14} />
+                    <Edit2Icon className="mr-2" size={16} aria-hidden="true" /> Editar
                   </Button>
 
                   <Button
                     aria-label={`Excluir curso ${course.name}`}
                     variant="ghost"
+                    className="text-[#b50909]"
                     onClick={() => {
                       setAlertVisible(true);
                       setEditing({
@@ -233,7 +244,7 @@ export default function Courses() {
                       });
                     }}
                   >
-                    <Trash size={14} />
+                    <Trash className="mr-2" size={16} aria-hidden="true" /> Excluir
                   </Button>
                 </div>
               </TableCell>
@@ -242,7 +253,7 @@ export default function Courses() {
         </TableBody>
       </Table>
 
-      <AlertDialog open={alertVisible}>
+      <AlertDialog open={alertVisible} onOpenChange={setAlertVisible}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
@@ -261,12 +272,14 @@ export default function Courses() {
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
+              className="bg-destructive text-white hover:bg-[#b50909]"
+              disabled={loading}
               onClick={(e) => {
                 e.preventDefault();
                 onDelete();
               }}
             >
-              Excluir curso
+              {loading ? "Excluindo…" : "Excluir curso"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -276,6 +289,7 @@ export default function Courses() {
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>{editing.status ? "Editar curso" : "Adicionar curso"}</DrawerTitle>
+            <DrawerDescription>Informe um nome claro para identificar o curso nas demais telas.</DrawerDescription>
           </DrawerHeader>
           <div className="overflow-y-auto px-4 pb-5 sm:px-6">
             <Form {...form}>
@@ -288,7 +302,7 @@ export default function Courses() {
                   name="name"
                   render={({ field, fieldState }) => (
                     <FormItem>
-                      <FormLabel>Nome do curso </FormLabel>
+                      <FormLabel>Nome do curso <span className="text-[#b50909]">(obrigatório)</span></FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Digite o nome do curso"
@@ -312,7 +326,7 @@ export default function Courses() {
                   </DrawerClose>
                   <Button type="submit" disabled={loading}>
                     {loading ? (
-                      <LoadingSpinner className="text-dark" />
+                      <><LoadingSpinner className="mr-2" /> Salvando…</>
                     ) : (
                       editing.status ? "Salvar alterações" : "Adicionar curso"
                     )}

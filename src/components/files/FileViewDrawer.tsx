@@ -5,10 +5,12 @@ import {
   DrawerContent,
   DrawerFooter,
   DrawerHeader,
+  DrawerDescription,
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loader';
+import { InlineFeedback } from '@/components/inline-feedback';
 
 interface FileViewDrawerProps {
   drawerVisibleView: boolean;
@@ -29,7 +31,8 @@ const FileViewDrawer: React.FC<FileViewDrawerProps> = ({
     <Drawer open={drawerVisibleView} onOpenChange={setDrawerVisibleView}>
       <DrawerContent className="h-[92dvh]">
         <DrawerHeader>
-          <DrawerTitle>Visualize seu arquivo</DrawerTitle>
+          <DrawerTitle>Comprovante da atividade</DrawerTitle>
+          <DrawerDescription>Confira o documento enviado. O arquivo é exibido somente para consulta.</DrawerDescription>
         </DrawerHeader>
         <div className="min-h-0 flex-1 overflow-hidden bg-[#f0f0f0]">
           {pdfUrl ? (
@@ -38,15 +41,17 @@ const FileViewDrawer: React.FC<FileViewDrawerProps> = ({
               width="100%"
               height="100%"
               className="h-full min-h-[55dvh] w-full"
-              title="PDF Viewer"
+              title="Comprovante da atividade em PDF"
               onLoad={() => setPdfLoading(false)}
               style={{ display: pdfLoading ? 'none' : 'block' }}
             />
+          ) : pdfLoading ? (
+            <div className="flex h-full w-full items-center justify-center gap-3" aria-live="polite"><LoadingSpinner /> Carregando documento…</div>
           ) : (
-            <div className="h-full w-full flex justify-center items-center"><LoadingSpinner className="bg-dark" /></div>
+            <div className="mx-auto max-w-lg p-6"><InlineFeedback variant="error" title="Não foi possível exibir o documento" description="Feche a visualização e tente novamente." /></div>
           )}
-          {pdfLoading && (
-            <div className="h-full w-full flex justify-center items-center"><LoadingSpinner className="bg-dark" /></div>
+          {pdfLoading && pdfUrl && (
+            <div className="flex h-full w-full items-center justify-center gap-3" aria-live="polite"><LoadingSpinner /> Carregando documento…</div>
           )}
         </div>
         <DrawerFooter className="border-t bg-white sm:flex-row sm:justify-end">

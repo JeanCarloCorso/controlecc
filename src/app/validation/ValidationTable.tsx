@@ -7,7 +7,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FileBadge, FileDownIcon, ArchiveIcon } from "lucide-react";
 import {
@@ -16,6 +15,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { LoadingSpinner } from "@/components/ui/loader";
+import { StatusBadge } from "@/components/status-badge";
+import { EmptyState } from "@/components/empty-state";
 
 interface ValidationTableProps {
   filteredFilesList: any[];
@@ -44,13 +45,6 @@ const ValidationTable: React.FC<ValidationTableProps> = ({
   setShowArchiveDialog,
   statuses,
 }) => {
-  const statusClasses: Record<string, string> = {
-    pending: "border-[#ffcd07] bg-[#fff5c2] text-[#333333]",
-    rejected: "border-[#e52207] bg-[#fde0db] text-[#8b0a03]",
-    approved: "border-[#168821] bg-[#e3f5e1] text-[#0b4b3f]",
-    archived: "border-[#636363] bg-[#e6e6e6] text-[#333333]",
-    processing: "border-[#155bcb] bg-[#d4e5ff] text-[#0c326f]",
-  };
   return (
     <Table>
       <TableHeader>
@@ -58,7 +52,7 @@ const ValidationTable: React.FC<ValidationTableProps> = ({
           <TableHead>Aluno</TableHead>
           <TableHead>Descrição</TableHead>
           <TableHead>Data de envio</TableHead>
-          <TableHead>Carga Horaria</TableHead>
+          <TableHead>Carga horária</TableHead>
           <TableHead>Status</TableHead>
           <TableHead className="w-[100px]">Ações</TableHead>
         </TableRow>
@@ -66,9 +60,9 @@ const ValidationTable: React.FC<ValidationTableProps> = ({
       <TableBody>
         {loading ? (
           <TableRow>
-            <TableCell colSpan={7} className="text-center">
-              <div className="flex justify-center items-center w-full">
-                <LoadingSpinner className="bg-dark" />
+            <TableCell colSpan={6} className="py-10 text-center">
+              <div className="flex w-full items-center justify-center gap-3" aria-live="polite">
+                <LoadingSpinner /> Carregando atividades…
               </div>
             </TableCell>
           </TableRow>
@@ -84,15 +78,13 @@ const ValidationTable: React.FC<ValidationTableProps> = ({
                         (file.createdAt.nanoseconds
                           ? file.createdAt.nanoseconds / 1000000
                           : 0)
-                    ).toLocaleString()
+                    ).toLocaleString("pt-BR")
                   : "Data não disponível"}
               </TableCell>
               <TableCell>{file.workload}h</TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className={statusClasses[file.status]}>
-                    {statuses[file.status]}
-                  </Badge>
+                  <StatusBadge status={file.archived ? "archived" : file.status} />
                 </div>
               </TableCell>
               <TableCell>
@@ -144,6 +136,7 @@ const ValidationTable: React.FC<ValidationTableProps> = ({
                     <Button
                       aria-label={`Arquivar arquivo de ${file.user.fullname}`}
                       variant="ghost"
+                      disabled={file.status !== "approved" || file.archived}
                       onClick={() => {
                         if (file.status !== "approved" || file.archived) return;
                         setCurrentFile(file);
@@ -152,9 +145,7 @@ const ValidationTable: React.FC<ValidationTableProps> = ({
                     >
                       <ArchiveIcon
                         size={18}
-                        className={
-                          file.archived ? "text-blue-600" : "text-gray-400"
-                        }
+                        aria-hidden="true"
                       />
                     </Button>
                   </TooltipTrigger>
@@ -172,9 +163,7 @@ const ValidationTable: React.FC<ValidationTableProps> = ({
           ))
         ) : (
           <TableRow>
-            <TableCell colSpan={7} className="text-center">
-              Nenhuma atividade encontrada para os filtros selecionados.
-            </TableCell>
+            <TableCell colSpan={6} className="p-0"><EmptyState title="Nenhuma atividade encontrada" description="Revise os filtros aplicados ou aguarde novos envios dos estudantes." /></TableCell>
           </TableRow>
         )}
       </TableBody>

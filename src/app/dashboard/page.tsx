@@ -15,6 +15,8 @@ import {
 import { ArrowRight, FileClock, FilePlus, User, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageLoader } from "@/components/page-loader";
+import { PageHeader } from "@/components/page-header";
+import { InlineFeedback } from "@/components/inline-feedback";
 
 const DashboardPage = () => {
   const [dashboardData, setDashboardData] = useState<{
@@ -30,12 +32,16 @@ const DashboardPage = () => {
   });
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [dataLoading, setDataLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     const getData = async () => {
       if (!session) return;
 
       try {
+        setDataLoading(true);
+        setLoadError(false);
         const [filesSnapshot, usersSnapshot] = await Promise.all([
           getDocs(collection(db, "files")),
           getDocs(collection(db, "users")),
@@ -55,6 +61,9 @@ const DashboardPage = () => {
         });
       } catch (error) {
         console.error("Erro ao obter dados do dashboard:", error);
+        setLoadError(true);
+      } finally {
+        setDataLoading(false);
       }
     };
 
@@ -68,13 +77,15 @@ const DashboardPage = () => {
       <div>
         <ResponsiveMenu></ResponsiveMenu>
 
-        <main className="container py-8 md:py-10">
-          <div className="gov-page-heading">
-            <h2 className="text-3xl font-semibold tracking-tight first:mt-0">
-              Painel geral
-            </h2>
-            <p>Visão geral das atividades complementares e dos usuários do sistema.</p>
-          </div>
+        <main id="main-content" className="container py-8 md:py-10">
+          <PageHeader
+            eyebrow="Administração"
+            title="Visão geral"
+            description="Acompanhe as atividades complementares e os estudantes cadastrados no sistema."
+          />
+          {loadError ? (
+            <div className="mb-5"><InlineFeedback variant="error" title="Não foi possível carregar os indicadores" description="Atualize a página ou tente novamente em alguns instantes." /></div>
+          ) : null}
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Card className="w-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -85,7 +96,7 @@ const DashboardPage = () => {
               </CardHeader>
               <CardContent className="flex flex-wrap items-center justify-between gap-3 pb-5">
                 <div className="text-4xl font-light text-[#071d41]">
-                  {dashboardData?.qUsers}
+                  {dataLoading ? <span className="text-lg" aria-live="polite">Carregando…</span> : dashboardData.qUsers}
                 </div>
                 <Button
                   variant={"ghost"}
@@ -102,13 +113,13 @@ const DashboardPage = () => {
             <Card className="w-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Arquivos submetidos
+                  Atividades enviadas
                 </CardTitle>
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#edf5ff] text-[#1351b4]"><FilePlus size={20} /></span>
               </CardHeader>
               <CardContent className="flex flex-wrap items-center justify-between gap-3 pb-5">
                 <div className="text-4xl font-light text-[#071d41]">
-                  {dashboardData?.qFiles}
+                  {dataLoading ? <span className="text-lg" aria-live="polite">Carregando…</span> : dashboardData.qFiles}
                 </div>
                 <Button
                   variant={"ghost"}
@@ -124,13 +135,13 @@ const DashboardPage = () => {
             <Card className="w-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-1 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Arquivos pendentes
+                  Atividades pendentes
                 </CardTitle>
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#fff5c2] text-[#6f4e00]"><FileClock size={20} /></span>
               </CardHeader>
               <CardContent className="flex flex-wrap items-center justify-between gap-3 pb-5">
                 <div className="text-4xl font-light text-[#071d41]">
-                  {dashboardData?.qPendingFiles}
+                  {dataLoading ? <span className="text-lg" aria-live="polite">Carregando…</span> : dashboardData.qPendingFiles}
                 </div>
                 <Button
                   variant={"ghost"}
@@ -146,13 +157,13 @@ const DashboardPage = () => {
             <Card className="w-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-1 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Arquivos Arquivados
+                  Atividades arquivadas
                 </CardTitle>
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e6e6e6] text-[#555555]"><Archive size={20} /></span>
               </CardHeader>
               <CardContent className="flex flex-wrap items-center justify-between gap-3 pb-5">
                 <div className="text-4xl font-light text-[#071d41]">
-                  {dashboardData.qArchivedFiles}
+                  {dataLoading ? <span className="text-lg" aria-live="polite">Carregando…</span> : dashboardData.qArchivedFiles}
                 </div>
                 <Button
                   variant={"ghost"}

@@ -52,7 +52,7 @@ function ChangePasswordPage() {
   return (
     <div className="gov-page">
       <ResponsiveMenu />
-      <main className="container py-8 md:py-10">
+      <main id="main-content" className="container py-8 md:py-10">
         <div className="gov-page-heading"><h1>Alterar senha</h1><p>Confirme sua identidade e defina uma nova senha de acesso.</p></div>
         <Card className="max-w-xl border-t-4 border-t-[#1351b4]">
           <CardHeader><CardTitle>Segurança da conta</CardTitle><CardDescription>Após a alteração, você precisará entrar novamente.</CardDescription></CardHeader>

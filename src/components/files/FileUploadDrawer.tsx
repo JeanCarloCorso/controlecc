@@ -18,6 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { cn } from '@/lib/utils';
 import { LoadingSpinner } from '@/components/ui/loader';
+import { Textarea } from '@/components/ui/textarea';
 
 interface FileUploadDrawerProps {
   drawerVisibleForm: boolean;
@@ -39,10 +40,9 @@ const FileUploadDrawer: React.FC<FileUploadDrawerProps> = ({
     <Drawer open={drawerVisibleForm} onOpenChange={setDrawerVisibleForm}>
       <DrawerTrigger asChild>
         <Button
-          variant={"secondary"}
           onClick={() => setDrawerVisibleForm(true)}
         >
-          <Plus size={16} />
+          <Plus className="mr-2" size={16} aria-hidden="true" />
           Adicionar atividade
         </Button>
       </DrawerTrigger>
@@ -59,7 +59,7 @@ const FileUploadDrawer: React.FC<FileUploadDrawerProps> = ({
                 name="name"
                 render={({ field, fieldState }) => (
                   <FormItem>
-                    <FormLabel>Nome da atividade</FormLabel>
+                    <FormLabel>Nome da atividade <span className="text-[#b50909]">(obrigatório)</span></FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Digite o nome da atividade"
@@ -76,10 +76,10 @@ const FileUploadDrawer: React.FC<FileUploadDrawerProps> = ({
                 name="description"
                 render={({ field, fieldState }) => (
                   <FormItem>
-                    <FormLabel>Descrição da atividade</FormLabel>
+                    <FormLabel>Descrição da atividade <span className="text-[#b50909]">(obrigatório)</span></FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Digite uma descrição para a atividade"
+                      <Textarea
+                        placeholder="Descreva a atividade e sua relação com a formação acadêmica"
                         className={fieldState.error ? "text-color-red" : ""}
                         {...field}
                       />
@@ -93,7 +93,7 @@ const FileUploadDrawer: React.FC<FileUploadDrawerProps> = ({
                 name="workload"
                 render={({ field, fieldState }) => (
                   <FormItem>
-                    <FormLabel>Carga horária</FormLabel>
+                    <FormLabel>Carga horária <span className="text-[#b50909]">(obrigatório)</span></FormLabel>
                     <FormControl>
                       <Input
                         type='number'
@@ -114,7 +114,7 @@ const FileUploadDrawer: React.FC<FileUploadDrawerProps> = ({
                 render={({ field }) => {
                   return (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Data de realização</FormLabel>
+                      <FormLabel>Data de realização <span className="text-[#b50909]">(obrigatório)</span></FormLabel>
                       <Popover modal={true}>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -154,11 +154,10 @@ const FileUploadDrawer: React.FC<FileUploadDrawerProps> = ({
                 name="file"
                 render={() => (
                   <FormItem>
-                    <FormLabel>Arquivo</FormLabel>
+                    <FormLabel>Comprovante em PDF <span className="text-[#b50909]">(obrigatório)</span></FormLabel>
                     <FormControl>
                       <Input
                         {...fileRef}
-                        placeholder="Arquivo"
                         type="file"
                         accept="application/pdf"
                         className="h-auto cursor-pointer py-3 file:mr-3 file:rounded-full file:bg-[#edf5ff] file:px-3 file:py-1 file:text-[#1351b4]"
@@ -174,7 +173,7 @@ const FileUploadDrawer: React.FC<FileUploadDrawerProps> = ({
                   <Button type="button" variant="outline">Cancelar</Button>
                 </DrawerClose>
                 <Button type="submit" className="w-full sm:w-auto" disabled={loading}>
-                  {loading ? <><LoadingSpinner className="mr-2" /> Enviando...</> : "Enviar para validação"}
+                  {loading ? <><LoadingSpinner className="mr-2" /> Enviando…</> : "Enviar para validação"}
                 </Button>
               </DrawerFooter>
             </form>

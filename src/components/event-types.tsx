@@ -11,6 +11,7 @@ import {
   Drawer,
   DrawerClose,
   DrawerContent,
+  DrawerDescription,
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
@@ -43,6 +44,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { EmptyState } from "@/components/empty-state";
+import { InlineFeedback } from "@/components/inline-feedback";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -53,6 +56,8 @@ const formSchema = z.object({
 export default function EventTypes() {
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
   const [editing, setEditing] = useState({
     status: false,
@@ -63,11 +68,14 @@ export default function EventTypes() {
 
   useEffect(() => {
     async function getUserInfo() {
+      setInitialLoading(true);
+      setLoadError(false);
       try {
         const q = query(collection(db, "eventTypes"));
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
+          setCourses([]);
           return;
         }
 
@@ -81,6 +89,9 @@ export default function EventTypes() {
 
       } catch (error) {
         console.error("Erro ao obter lista de arquivos:", error);
+        setLoadError(true);
+      } finally {
+        setInitialLoading(false);
       }
     }
     getUserInfo();
@@ -103,21 +114,15 @@ export default function EventTypes() {
 
         const docRef = doc(db, "eventTypes", editing.id);
 
-        setDoc(docRef, {
+        await setDoc(docRef, {
           name: values.name
         }, {
           merge: true
-        }).then(() => {
-          toast({
-            title: "Tipo de evento atualizado com sucesso!",
-          })
-
-          setLoading(false);
-          setDrawerVisibleForm(false);
-          form.clearErrors();
-          form.reset();
-
         });
+        toast({ title: "Tipo de evento atualizado", description: "As alterações foram salvas com sucesso." });
+        setDrawerVisibleForm(false);
+        form.clearErrors();
+        form.reset();
 
       } else {
 
@@ -129,10 +134,10 @@ export default function EventTypes() {
         await addDoc(collection(db, "eventTypes"), data);
 
         toast({
-          title: "Tipo de evento cadastrado com sucesso!",
+          title: "Tipo de evento cadastrado",
+          description: "O tipo já pode ser usado nas atividades.",
         })
 
-        setLoading(false);
         setDrawerVisibleForm(false);
         form.clearErrors();
         form.reset();
@@ -142,53 +147,52 @@ export default function EventTypes() {
 
 
     } catch (e) {
-      setLoading(false);
       toast({
         variant: "destructive",
-        title: "Falha ao cadastrar Tipo de evento! Tente novamente.",
+        title: "Não foi possível salvar o tipo de evento",
+        description: "Revise os dados e tente novamente.",
       })
+    } finally {
+      setLoading(false);
     }
 
   }
 
   async function onDelete() {
+    setLoading(true);
     try {
       let docRef = doc(db, 'eventTypes', editing.id);
 
-      await deleteDoc(docRef)
-        .then(() => {
-
-          setAlertVisible(false);
-
-          toast({
-            title: "Tipo de evento deletado com sucesso!",
-          });
-
-
-          setLoading(false)
-        })
+      await deleteDoc(docRef);
+      setAlertVisible(false);
+      toast({ title: "Tipo de evento excluído", description: "O registro foi removido com sucesso." });
 
 
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Falha ao excluir Tipo de evento! Tente novamente",
+        title: "Não foi possível excluir o tipo de evento",
+        description: "Verifique se o tipo está em uso e tente novamente.",
       });
 
       setAlertVisible(false);
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
     <div className="flex w-full flex-col items-stretch pt-4">
 
+      {loadError ? <div className="mb-4"><InlineFeedback variant="error" title="Não foi possível carregar os tipos de evento" description="Atualize a página ou tente novamente em alguns instantes." /></div> : null}
+
       <div className="flex justify-end pb-3">
 
         <Button
           variant={"default"}
-          onClick={() => { setDrawerVisibleForm(true) }}
+          onClick={() => { setEditing({ status: false, id: "" }); form.reset({ name: "" }); setDrawerVisibleForm(true) }}
         >
-          <Plus size={16} />
+          <Plus className="mr-2" size={16} aria-hidden="true" />
 
           Adicionar tipo de evento
         </Button>
@@ -204,8 +208,8 @@ export default function EventTypes() {
         </TableHeader>
         <TableBody>
           {
-            courses?.length === 0 ? <TableRow><TableCell colSpan={2} className="py-10 text-center text-[#555555]">Nenhum tipo de evento cadastrado.</TableCell></TableRow> : courses?.map((course: any) => (
-              <TableRow key={course.name}>
+            initialLoading ? <TableRow><TableCell colSpan={2} className="py-10"><span className="flex items-center justify-center gap-3" aria-live="polite"><LoadingSpinner /> Carregando tipos de evento…</span></TableCell></TableRow> : courses?.length === 0 ? <TableRow><TableCell colSpan={2} className="p-0"><EmptyState title="Nenhum tipo de evento cadastrado" description="Adicione o primeiro tipo para classificá-lo nas atividades." /></TableCell></TableRow> : courses?.map((course: any) => (
+              <TableRow key={course.id}>
                 <TableCell>{course.name}</TableCell>
                 <TableCell>
                   <div>
@@ -221,12 +225,13 @@ export default function EventTypes() {
                         setDrawerVisibleForm(true)
                       }}
                     >
-                      <Edit2Icon size={14} />
+                      <Edit2Icon className="mr-2" size={16} aria-hidden="true" /> Editar
                     </Button>
 
                     <Button
                       aria-label={`Excluir tipo de evento ${course.name}`}
                       variant="ghost"
+                      className="text-[#b50909]"
                       onClick={() => {
                         setAlertVisible(true)
                         setEditing({
@@ -235,7 +240,7 @@ export default function EventTypes() {
                         })
                       }}
                     >
-                      <Trash size={14} />
+                      <Trash className="mr-2" size={16} aria-hidden="true" /> Excluir
                     </Button>
 
                   </div>
@@ -248,6 +253,7 @@ export default function EventTypes() {
 
       <AlertDialog
         open={alertVisible}
+        onOpenChange={setAlertVisible}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -261,12 +267,14 @@ export default function EventTypes() {
               onClick={() => { setAlertVisible(false) }}
             >Cancelar</AlertDialogCancel>
             <AlertDialogAction
+              className="bg-destructive text-white hover:bg-[#b50909]"
+              disabled={loading}
               onClick={(e) => {
                 e.preventDefault()
                 onDelete()
               }}
             >
-              Excluir tipo de evento
+              {loading ? "Excluindo…" : "Excluir tipo de evento"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -279,6 +287,7 @@ export default function EventTypes() {
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>{editing.status ? "Editar tipo de evento" : "Adicionar tipo de evento"}</DrawerTitle>
+            <DrawerDescription>Use um nome claro e reconhecível para estudantes e administradores.</DrawerDescription>
           </DrawerHeader>
           <div className='overflow-y-auto px-4 pb-5 sm:px-6'>
             <Form {...form}>
@@ -288,7 +297,7 @@ export default function EventTypes() {
                   name="name"
                   render={({ field, fieldState }) => (
                     <FormItem>
-                      <FormLabel>Nome do evento </FormLabel>
+                      <FormLabel>Nome do tipo de evento <span className="text-[#b50909]">(obrigatório)</span></FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Digite o tipo do evento"
@@ -306,7 +315,7 @@ export default function EventTypes() {
                     <Button type="button" variant="outline">Cancelar</Button>
                   </DrawerClose>
                   <Button type="submit" disabled={loading}>
-                    {loading ? <LoadingSpinner /> : editing.status ? "Salvar alterações" : "Adicionar tipo de evento"}
+                    {loading ? <><LoadingSpinner className="mr-2" /> Salvando…</> : editing.status ? "Salvar alterações" : "Adicionar tipo de evento"}
                   </Button>
                 </DrawerFooter>
               </form>

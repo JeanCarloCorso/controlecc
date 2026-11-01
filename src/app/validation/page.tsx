@@ -29,6 +29,9 @@ import ValidationTable from "./ValidationTable";
 import ValidationDrawer from "./ValidationDrawer";
 import ValidationArchiveDialog from "./ValidationArchiveDialog";
 import { PageLoader } from "@/components/page-loader";
+import { PageHeader } from "@/components/page-header";
+import { InlineFeedback } from "@/components/inline-feedback";
+import { Label } from "@/components/ui/label";
 
 interface Filters {
   status: string;
@@ -60,6 +63,8 @@ const ValidationPage = () => {
   const [filesList, setFilesList] = useState<any[]>([]);
   const [currentFile, setCurrentFile] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [mergedPdfLoading, setMergedPdfLoading] = useState(false);
   const [downloadLoadingFiles, setDownloadLoadingFiles] = useState<
@@ -124,6 +129,7 @@ const ValidationPage = () => {
 
   const getAllFiles = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
 
     if (!session) {
       return;
@@ -167,6 +173,7 @@ const ValidationPage = () => {
       setLoading(false);
     } catch (error) {
       setLoading(false);
+      setLoadError(true);
       console.error("Erro ao obter lista de arquivos:", error);
     }
   }, [session]);
@@ -276,11 +283,12 @@ const ValidationPage = () => {
       .catch((error) => {
         console.error("Erro ao obter a URL do PDF:", error);
         setPdfUrl("");
+        toast({ variant: "destructive", title: "Não foi possível carregar o documento", description: "Feche a visualização e tente novamente." });
       })
       .finally(() => {
         setPdfLoading(false);
       });
-  }, [pdfPath]);
+  }, [pdfPath, toast]);
 
   const handleOpenPdf = async (filePath: string, fileId: string) => {
     if (!filePath) {
@@ -301,6 +309,7 @@ const ValidationPage = () => {
       window.open(url, "_blank");
     } catch (error) {
       console.error("Erro ao obter a URL do PDF:", error);
+      toast({ variant: "destructive", title: "Não foi possível baixar o documento", description: "Tente novamente em alguns instantes." });
     } finally {
       setDownloadLoadingFiles((prev) => ({ ...prev, [fileId]: false }));
     }
@@ -421,6 +430,11 @@ const ValidationPage = () => {
   };
 
   const updateStatus = async () => {
+    if (!formValidation.status || !formValidation.workload || Number(formValidation.workload) <= 0) {
+      toast({ variant: "destructive", title: "Revise os dados da validação", description: "Informe uma situação e uma carga horária maior que zero." });
+      return;
+    }
+    setSaving(true);
     try {
       if (formValidation && currentFile.uid) {
         const fileRef = doc(db, "files", currentFile.uid);
@@ -432,26 +446,36 @@ const ValidationPage = () => {
         };
         await setDoc(fileRef, data, { merge: true });
         toast({
-          title: "Validação concluida com sucesso",
+          title: "Validação concluída com sucesso",
+          description: "A situação da atividade foi atualizada.",
           variant: "default",
         });
-        setTimeout(() => {
-          setDrawerVisibleView(false);
-        }, 2000);
+        setAlertVisible({ visible: false });
+        setDrawerVisibleView(false);
+        await getAllFiles();
       } else {
         console.warn("Form ou ID não fornecidos");
       }
     } catch (error) {
       console.error("Erro ao atualizar o status:", error);
+      toast({ variant: "destructive", title: "Não foi possível salvar a validação", description: "Tente novamente em alguns instantes." });
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleArchiveFile = async () => {
     if (!currentFile?.uid) return;
-    const fileRef = doc(db, "files", currentFile.uid);
-    await setDoc(fileRef, { archived: true }, { merge: true });
-    setShowArchiveDialog(false);
-    getAllFiles(); // Atualiza a lista
+    try {
+      const fileRef = doc(db, "files", currentFile.uid);
+      await setDoc(fileRef, { archived: true }, { merge: true });
+      setShowArchiveDialog(false);
+      toast({ title: "Atividade arquivada", description: "O registro não aparecerá mais na listagem padrão." });
+      await getAllFiles();
+    } catch (error) {
+      console.error("Erro ao arquivar atividade:", error);
+      toast({ variant: "destructive", title: "Não foi possível arquivar a atividade", description: "Tente novamente em alguns instantes." });
+    }
   };
 
   useEffect(() => {
@@ -493,19 +517,21 @@ const ValidationPage = () => {
     return (
       <TooltipProvider>
         <ResponsiveMenu />
-        <main className="container py-8 md:py-10">
-          <div className="gov-page-heading flex flex-col items-stretch justify-between gap-5 xl:flex-row xl:items-end">
-            <div>
-            <h2 className="text-3xl font-semibold tracking-tight first:mt-0">
-              Validação de atividades
-            </h2>
-            <p>Analise documentos, filtre registros e atualize a situação das atividades.</p>
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <main id="main-content" className="container py-8 md:py-10">
+          <PageHeader eyebrow="Administração" title="Validação de atividades" description="Analise comprovantes, registre a decisão e acompanhe as atividades enviadas pelos estudantes." />
+          <section className="gov-section mb-5" aria-labelledby="validation-actions-title">
+            <h2 id="validation-actions-title" className="mb-4 text-lg font-semibold">Pesquisa e ações</h2>
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
               <div className="relative w-full sm:w-[280px]">
+                <Label htmlFor="student-search" className="mb-1.5 block">Estudante</Label>
                 <Input
+                  id="student-search"
                   type="text"
-                  placeholder="Pesquisar aluno"
+                  role="combobox"
+                  aria-expanded={showUserSuggestions}
+                  aria-controls="student-suggestions"
+                  aria-autocomplete="list"
+                  placeholder="Digite o nome do estudante"
                   value={userSearch}
                   className="pr-9"
                   onFocus={() => setShowUserSuggestions(true)}
@@ -513,6 +539,9 @@ const ValidationPage = () => {
                     setUserSearch(e.target.value);
                     setSelectedUserId("");
                     setShowUserSuggestions(true);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") setShowUserSuggestions(false);
                   }}
                 />
 
@@ -532,12 +561,14 @@ const ValidationPage = () => {
                 )}
 
                 {showUserSuggestions && (
-                  <div className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-md border bg-background shadow-md">
+                  <div id="student-suggestions" role="listbox" aria-label="Estudantes encontrados" className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-sm border border-[#cccccc] bg-white shadow-md">
                     {filteredUsersList.length > 0 ? (
                       filteredUsersList.map(([userId, fullname]) => (
                         <button
                           key={userId}
                           type="button"
+                          role="option"
+                          aria-selected={selectedUserId === userId}
                           className="w-full px-3 py-2 text-left text-sm hover:bg-accent"
                           onClick={() => {
                             setSelectedUserId(userId);
@@ -577,23 +608,16 @@ const ValidationPage = () => {
                 variant="outline"
                 className="w-full sm:w-auto"
                 aria-label={filtersVisible ? "Ocultar filtros" : "Exibir filtros"}
+                aria-expanded={filtersVisible}
+                aria-controls="validation-filters"
                 onClick={() => setFiltersVisible(!filtersVisible)}
               >
                 <FilterIcon size={18} />
-                <span className="ml-2 sm:hidden">{filtersVisible ? "Ocultar filtros" : "Exibir filtros"}</span>
+                <span className="ml-2">{filtersVisible ? "Ocultar filtros" : "Exibir filtros"}</span>
               </Button>
             </div>
-          </div>
-          <div
-            className={`
-              transition-all duration-500 ease-in-out overflow-hidden 
-              ${
-                filtersVisible
-                  ? "max-h-[500px] opacity-100"
-                  : "max-h-0 opacity-0"
-              }
-            `}
-          >
+          </section>
+          {filtersVisible ? (
             <ValidationFilters
               filters={filters}
               handleFilterChange={handleFilterChange}
@@ -602,7 +626,8 @@ const ValidationPage = () => {
               filterDisplayNames={filterDisplayNames}
               statuses={statuses}
             />
-          </div>
+          ) : null}
+          {loadError ? <div className="mb-5"><InlineFeedback variant="error" title="Não foi possível carregar as atividades" description="Atualize a página ou tente novamente em alguns instantes." /></div> : null}
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-sm text-[#555555]">
             <p aria-live="polite"><strong className="text-[#333333]">{filteredFilesList.length}</strong> {filteredFilesList.length === 1 ? "atividade encontrada" : "atividades encontradas"}</p>
             {(selectedUserId || filters.status !== "all" || filters.description || filters.createdAt || filters.workload || filters.user || filters.includeArchived) && (
@@ -641,9 +666,9 @@ const ValidationPage = () => {
             <AlertDialogTrigger asChild></AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Confirmação</AlertDialogTitle>
+                <AlertDialogTitle>Confirmar alteração da validação</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Tem certeza que deseja alterar a validação do arquivo?
+                  A nova situação e a carga horária serão exibidas ao estudante. Deseja salvar esta alteração?
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -651,13 +676,12 @@ const ValidationPage = () => {
                   Cancelar
                 </AlertDialogCancel>
                 <AlertDialogAction
+                  disabled={saving}
                   onClick={() => {
                     updateStatus();
-                    setAlertVisible(false);
-                    setDrawerVisibleView(false);
                   }}
                 >
-                  Sim
+                  {saving ? "Salvando…" : "Confirmar alteração"}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

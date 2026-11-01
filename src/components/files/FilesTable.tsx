@@ -7,24 +7,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from '@/components/ui/button';
 import { FileBadge } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/loader';
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { StatusBadge } from "@/components/status-badge";
+import { EmptyState } from "@/components/empty-state";
 
-const statuses: any = {
-  "pending": "Pendente",
-  "rejected": "Rejeitado",
-  "approved": "Aprovado",
-  "processing": "Processando",
-}
-const statusClasses: Record<string, string> = {
-  pending: "border-[#ffcd07] bg-[#fff5c2] text-[#333333]",
-  rejected: "border-[#e52207] bg-[#fde0db] text-[#8b0a03]",
-  approved: "border-[#168821] bg-[#e3f5e1] text-[#0b4b3f]",
-  processing: "border-[#155bcb] bg-[#d4e5ff] text-[#0c326f]",
-};
 
 interface FilesTableProps {
   filesList: any[];
@@ -49,29 +38,28 @@ const FilesTable: React.FC<FilesTableProps> = ({
           <TableHead>Descrição</TableHead>
           <TableHead>Data de realização</TableHead>
           <TableHead>Data de envio</TableHead>
-          <TableHead>Carga Horaria</TableHead>
+          <TableHead>Carga horária</TableHead>
           <TableHead>Status</TableHead>
           <TableHead className="w-[100px]">Arquivo</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {filesList.length > 0
-          ? loading ? (
+        {loading ? (
             <TableRow>
               <TableCell colSpan={7} className="py-10 text-center">
-                <div className=" flex align-center justify-center"><LoadingSpinner className="bg-dark" /></div>
+                <div className="flex items-center justify-center gap-3" aria-live="polite"><LoadingSpinner /> Carregando atividades…</div>
               </TableCell>
             </TableRow>
-          ) : (
+          ) : filesList.length > 0 ? (
             filesList?.map((file: any) => (
               <TableRow key={file.pathFile}>
                 <TableCell>{file.name ?? 'Sem nome'}</TableCell>
                 <TableCell>{file.description ?? 'Sem Descrição'}</TableCell>
-                <TableCell>{file.completionDate ? new Date(file.completionDate).toLocaleDateString() : "Sem data de realização"}</TableCell>
-                <TableCell className="font-medium">{new Date(file.createdAt.seconds * 1000 + file.createdAt.nanoseconds / 1000000).toLocaleString()}</TableCell>
+                <TableCell>{file.completionDate ? new Date(`${file.completionDate}T00:00:00Z`).toLocaleDateString("pt-BR", { timeZone: "UTC" }) : "Não informada"}</TableCell>
+                <TableCell className="font-medium">{file.createdAt?.seconds ? new Date(file.createdAt.seconds * 1000 + (file.createdAt.nanoseconds || 0) / 1000000).toLocaleString("pt-BR") : "Não informada"}</TableCell>
                 <TableCell>{file.workload}h</TableCell>
                 <TableCell>
-                  <Badge variant="outline" className={statusClasses[file.status]}>{statuses[file.status] || file.status}</Badge>
+                  <StatusBadge status={file.status} />
                 </TableCell>
                 <TableCell>
                   <Tooltip>
@@ -95,12 +83,9 @@ const FilesTable: React.FC<FilesTableProps> = ({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={7} className="py-10 text-center text-[#555555]">
-                Nenhuma atividade cadastrada.
-              </TableCell>
+              <TableCell colSpan={7} className="p-0"><EmptyState title="Nenhuma atividade cadastrada" description="Use o botão “Adicionar atividade” para enviar seu primeiro comprovante." /></TableCell>
             </TableRow>
-          )
-        }
+          )}
       </TableBody>
     </Table>
   );
