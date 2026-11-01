@@ -5,9 +5,9 @@ import { GovFooter, GovPublicHeader } from "@/components/gov-public-header";
 
 export default function Home() {
   return (
-    <div className="gov-page">
+    <div className="gov-page flex min-h-screen flex-col">
       <GovPublicHeader />
-      <main>
+      <main className="flex-1">
         <section className="border-b border-[#cccccc] bg-white">
           <div className="container py-12 md:py-16">
             <div className="max-w-3xl">
