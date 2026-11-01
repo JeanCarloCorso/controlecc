@@ -99,6 +99,10 @@ const ResponsiveMenu: React.FC = () => {
                     )
                   }
 
+                  <DropdownMenuItem onClick={() => router.push("/change-password")}>
+                    Alterar senha
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
 
                   <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
                     Sair

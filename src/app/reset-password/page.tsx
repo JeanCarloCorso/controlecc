@@ -1,16 +1,84 @@
 "use client";
-import { FormEvent, Suspense, useState } from "react";
+
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { GovFooter, GovPublicHeader } from "@/components/gov-public-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { LoadingSpinner } from "@/components/ui/loader";
+import { toast } from "@/hooks/use-toast";
+
+const formSchema = z.object({
+  password: z.string().min(8, "A senha precisa ter no mínimo 8 caracteres"),
+  confirmPassword: z.string().min(8, "Confirme sua senha"),
+}).refine((data) => data.password === data.confirmPassword, {
+  path: ["confirmPassword"], message: "As senhas não coincidem",
+});
+
 function ResetPasswordContent() {
   const token = useSearchParams().get("token");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
-  async function submit(event: FormEvent) { event.preventDefault(); const response = await fetch("/api/auth-tokens/reset", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, password }) }); const body = await response.json(); setMessage(response.ok ? "Senha alterada com sucesso." : body.error); }
-  return <div className="gov-auth-page"><GovPublicHeader /><main className="gov-auth-main"><Card className="gov-auth-card"><CardHeader><p className="gov-eyebrow">Segurança da conta</p><CardTitle>Redefinir senha</CardTitle><CardDescription>Crie uma nova senha com no mínimo oito caracteres.</CardDescription></CardHeader><CardContent><form onSubmit={submit} className="space-y-4"><label className="block font-semibold" htmlFor="new-password">Nova senha</label><Input id="new-password" type="password" minLength={8} required value={password} onChange={e => setPassword(e.target.value)} placeholder="Digite sua nova senha"/><Button className="w-full" type="submit">Salvar nova senha</Button></form>{message && <p className="gov-status-info mt-5" role="status">{message}</p>}<Link className="mt-6 inline-block font-semibold underline" href="/login">Voltar para o login</Link></CardContent></Card></main><GovFooter /></div>;
+  const [loading, setLoading] = useState(false);
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: { password: "", confirmPassword: "" },
+    mode: "onBlur",
+  });
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!token) {
+      toast({ variant: "destructive", title: "Link inválido", description: "Solicite um novo link de redefinição de senha." });
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await fetch("/api/auth-tokens/reset", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, password: values.password }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || "Não foi possível alterar a senha");
+      form.reset();
+      toast({ title: "Senha alterada com sucesso", description: "Você já pode entrar com a nova senha." });
+    } catch (error) {
+      toast({ variant: "destructive", title: "Não foi possível alterar a senha", description: error instanceof Error ? error.message : "Tente novamente em instantes." });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="gov-auth-page">
+      <GovPublicHeader />
+      <main className="gov-auth-main">
+        <Card className="gov-auth-card">
+          <CardHeader><p className="gov-eyebrow">Segurança da conta</p><CardTitle>Redefinir senha</CardTitle><CardDescription>Crie uma nova senha com no mínimo oito caracteres.</CardDescription></CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                <FormField control={form.control} name="password" render={({ field }) => (
+                  <FormItem><FormLabel>Nova senha</FormLabel><FormControl><Input type="password" autoComplete="new-password" placeholder="Digite a nova senha" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField control={form.control} name="confirmPassword" render={({ field }) => (
+                  <FormItem><FormLabel>Confirmação da nova senha</FormLabel><FormControl><Input type="password" autoComplete="new-password" placeholder="Confirme a nova senha" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                <Button className="w-full" type="submit" disabled={loading}>{loading ? <LoadingSpinner className="text-black" /> : "Salvar nova senha"}</Button>
+              </form>
+            </Form>
+            <Link className="mt-6 inline-block font-semibold underline" href="/login">Voltar para o login</Link>
+          </CardContent>
+        </Card>
+      </main>
+      <GovFooter />
+    </div>
+  );
 }
-export default function ResetPasswordPage() { return <Suspense fallback={<main className="p-8 text-center">Carregando...</main>}><ResetPasswordContent /></Suspense>; }
+
+export default function ResetPasswordPage() {
+  return <Suspense fallback={<main className="p-8 text-center">Carregando...</main>}><ResetPasswordContent /></Suspense>;
+}
