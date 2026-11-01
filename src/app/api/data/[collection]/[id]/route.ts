@@ -17,8 +17,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     if (collection === "files") {
       const body = await readJson(request, activityPatchSchema);
-      const result = await query("UPDATE activities SET status=coalesce($1,status), observation=CASE WHEN $2::boolean THEN $3 ELSE observation END, workload=coalesce($4,workload), archived=coalesce($5,archived), reviewed_at=CASE WHEN $1 IS NOT NULL THEN now() ELSE reviewed_at END, reviewed_by=CASE WHEN $1 IS NOT NULL THEN $6 ELSE reviewed_by END WHERE id=$7", [body.status ?? null, "observation" in body, body.observation ?? null, body.workload ?? null, body.archived ?? null, user.id, id]);
-      if (!result.rowCount) throw new ApiError(404, "Atividade não encontrada");
+      await transaction(async (client) => {
+        const result = await client.query<{ user_id: string; name: string; status: "pending" | "approved" | "rejected" }>("UPDATE activities SET status=coalesce($1,status), observation=CASE WHEN $2::boolean THEN $3 ELSE observation END, workload=coalesce($4,workload), archived=coalesce($5,archived), reviewed_at=CASE WHEN $1 IS NOT NULL THEN now() ELSE reviewed_at END, reviewed_by=CASE WHEN $1 IS NOT NULL THEN $6 ELSE reviewed_by END WHERE id=$7 RETURNING user_id, name, status", [body.status ?? null, "observation" in body, body.observation ?? null, body.workload ?? null, body.archived ?? null, user.id, id]);
+        if (!result.rows[0]) throw new ApiError(404, "Atividade não encontrada");
+        if (body.status) {
+          const activity = result.rows[0];
+          const statusLabel = { approved: "aprovada", rejected: "rejeitada", pending: "marcada como pendente" }[activity.status];
+          const observation = body.observation?.trim();
+          const message = `Sua atividade "${activity.name}" foi ${statusLabel}.${observation ? ` Observação: ${observation}` : ""}`;
+          await client.query("INSERT INTO notifications(user_id, activity_id, title, message) VALUES($1,$2,$3,$4)", [activity.user_id, id, "Atividade avaliada", message]);
+        }
+      });
       return NextResponse.json({ ok: true });
     }
 

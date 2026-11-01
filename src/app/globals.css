@@ -131,7 +131,8 @@
   .gov-status-error { @apply border-l-4 border-[#e52207] bg-[#fde0db] p-4 text-[#333333]; }
   .gov-section { @apply rounded-sm border border-[#cccccc] bg-white p-5 shadow-sm md:p-6; }
   .gov-field-help { @apply mt-1 text-sm text-[#555555]; }
-  .gov-account-menu [role="menuitem"]:focus-visible {
+  .gov-dropdown-menu:focus-visible,
+  .gov-dropdown-menu [role="menuitem"]:focus-visible {
     outline: none !important;
   }
 

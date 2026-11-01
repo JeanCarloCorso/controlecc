@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { BookOpen, ChevronDown, UserCircle } from 'lucide-react';
+import { NotificationsMenu } from '@/components/notifications-menu';
 
 const ResponsiveMenu: React.FC = () => {
   const { data: session } = useSession();
@@ -64,7 +65,8 @@ const ResponsiveMenu: React.FC = () => {
               ))}
               </div>
             </div>
-            <div className="order-2 shrink-0 md:order-none">
+            <div className="order-2 flex shrink-0 items-center gap-1 md:order-none">
+              {!isAdmin ? <NotificationsMenu /> : null}
               <DropdownMenu>
                 <DropdownMenuTrigger
                   className="flex min-h-10 items-center justify-center rounded-full px-3 text-[#1351b4] hover:bg-[#edf5ff]"
@@ -79,7 +81,7 @@ const ResponsiveMenu: React.FC = () => {
                   <ChevronDown size={14} className='ml-2' />
                 </DropdownMenuTrigger>
 
-                <DropdownMenuContent className="gov-account-menu">
+                <DropdownMenuContent className="gov-dropdown-menu gov-account-menu">
                   <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
                   <DropdownMenuItem onClick={() => router.push("/change-password")}>
                     Alterar senha

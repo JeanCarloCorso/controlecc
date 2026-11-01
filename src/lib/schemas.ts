@@ -87,3 +87,4 @@ export const resetPasswordSchema = z.object({
   password: passwordSchema,
 }).strict();
 export const tokenSchema = z.object({ token: z.string().min(32).max(256) }).strict();
+export const notificationReadSchema = z.object({ read: z.literal(true) }).strict();
