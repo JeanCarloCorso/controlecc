@@ -31,12 +31,7 @@ interface FilesTableProps {
   loading: boolean;
   setDrawerVisibleView: (open: boolean) => void;
   setPdfPath: (path: string) => void;
-  drawerVisibleView: boolean;
-  pdfUrl: string | null;
-  pdfLoading: boolean;
   setPdfLoading: (loading: boolean) => void;
-  setPdfUrl: (url: string | null) => void;
-  setFilesList: (files: any[]) => void;
 }
 
 const FilesTable: React.FC<FilesTableProps> = ({
@@ -44,12 +39,7 @@ const FilesTable: React.FC<FilesTableProps> = ({
   loading,
   setDrawerVisibleView,
   setPdfPath,
-  drawerVisibleView,
-  pdfUrl,
-  pdfLoading,
   setPdfLoading,
-  setPdfUrl,
-  setFilesList,
 }) => {
   return (
     <Table>

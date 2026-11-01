@@ -13,7 +13,6 @@ interface ValidationDrawerProps {
   pdfLoading: boolean;
   formValidation: any;
   setFormValidation: (v: any) => void;
-  updateStatus: () => void;
   setAlertVisible: (v: any) => void;
   currentFile: any;
 }
@@ -25,7 +24,6 @@ const ValidationDrawer: React.FC<ValidationDrawerProps> = ({
   pdfLoading,
   formValidation,
   setFormValidation,
-  updateStatus,
   setAlertVisible,
   currentFile,
 }) => {

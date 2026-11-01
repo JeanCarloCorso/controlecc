@@ -14,7 +14,6 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-  DrawerTrigger,
 } from "@/components/ui/drawer";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -81,17 +80,13 @@ export default function Courses() {
           return;
         }
 
+        const arrayCourses: Array<any> = [];
         querySnapshot.forEach((doc) => {
-          const arrayCourses: Array<any> = [];
-
-          querySnapshot.forEach((doc) => {
-            let course: any = doc.data();
-            course.id = doc.id;
-            arrayCourses.push(course);
-          });
-
-          setCourses(arrayCourses);
+          const course: any = doc.data();
+          course.id = doc.id;
+          arrayCourses.push(course);
         });
+        setCourses(arrayCourses);
       } catch (error) {
         console.error("Erro ao obter lista de arquivos:", error);
       }
@@ -138,7 +133,7 @@ export default function Courses() {
         data.projects = [];
         data.createdAt = serverTimestamp();
 
-        const docRef = await addDoc(collection(db, "courses"), data);
+        await addDoc(collection(db, "courses"), data);
 
         toast({
           title: "Curso cadastrado com sucesso!",

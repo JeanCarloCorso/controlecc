@@ -2,21 +2,8 @@
 'use client'
 import ResponsiveMenu from '@/components/responsive-menu';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
-import { collection, query, where, getDocs, database as db } from "@/lib/api-client";
-import { z } from "zod";
-import { useToast } from "@/hooks/use-toast";
-import { LoadingSpinner } from '@/components/ui/loader';
-import { Progress } from "@/components/ui/progress";
+import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import withAuthorization from '@/components/with-authorization';
 import Courses from '@/components/courses'
 import Projects from '@/components/projects';
@@ -24,55 +11,7 @@ import EventTypes from '@/components/event-types';
 import { PageLoader } from '@/components/page-loader';
 
 const AdminPanelPage = () => {
-  const [courses, setCourses] = useState<any[]>([]);
-  const [eventTypes, setEventTypes] = useState<any[]>([]);
   const { data: session, status } = useSession();
-  const { toast } = useToast();
-
-
-  useEffect(() => {
-    async function getUserInfo() {
-      if (!session) {
-        return;
-      }
-
-      try {
-        const q = query(collection(db, "courses"));
-        const e = query(collection(db, "eventTypes"));
-
-        const querySnapshot = await getDocs(q);
-        const queryeSnapshot = await getDocs(e);
-
-        if (querySnapshot.empty && queryeSnapshot.empty) {
-          return;
-        }
-
-
-        querySnapshot.forEach((doc) => {
-
-          const data = doc.data();
-
-          const arrayCourses: Array<any> = [];
-          querySnapshot.forEach((doc) => {
-            arrayCourses.push(doc.data());
-          });
-
-          const arrayEvents: Array<any> = [];
-          querySnapshot.forEach((doc) => {
-            arrayEvents.push(doc.data());
-          });
-
-          setCourses(arrayCourses);
-          setEventTypes(arrayEvents);
-
-        });
-      } catch (error) {
-        console.error("Erro ao obter lista de arquivos:", error);
-      }
-    }
-    getUserInfo();
-
-  }, [session, status]);
 
 
   if (status === 'loading' || !session) {

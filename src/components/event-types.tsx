@@ -14,7 +14,6 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-  DrawerTrigger,
 } from "@/components/ui/drawer"
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -72,17 +71,13 @@ export default function EventTypes() {
           return;
         }
 
+        const arrayCourses: Array<any> = [];
         querySnapshot.forEach((doc) => {
-          const arrayCourses: Array<any> = [];
-
-          querySnapshot.forEach((doc) => {
-            let course: any = doc.data()
-            course.id = doc.id
-            arrayCourses.push(course);
-          });
-
-          setCourses(arrayCourses);
+          const course: any = doc.data()
+          course.id = doc.id
+          arrayCourses.push(course);
         });
+        setCourses(arrayCourses);
 
       } catch (error) {
         console.error("Erro ao obter lista de arquivos:", error);
@@ -131,7 +126,7 @@ export default function EventTypes() {
 
         data.createdAt = serverTimestamp();
 
-        const docRef = await addDoc(collection(db, "eventTypes"), data);
+        await addDoc(collection(db, "eventTypes"), data);
 
         toast({
           title: "Tipo de evento cadastrado com sucesso!",

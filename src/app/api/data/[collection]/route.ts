@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { query, transaction } from "@/lib/db";
+import { query } from "@/lib/db";
 import { requireUser } from "@/lib/server-auth";
 
 const dateValue = (value: Date | string) => ({ seconds: Math.floor(new Date(value).getTime() / 1000) });

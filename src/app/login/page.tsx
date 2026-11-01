@@ -42,7 +42,6 @@ const formSchema = z.object({
  */
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -147,7 +146,6 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              {error && <p className="text-red-500">{error}</p>}
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? <LoadingSpinner className="text-black"/> : "Entrar"}
               </Button>

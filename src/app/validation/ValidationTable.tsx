@@ -28,9 +28,7 @@ interface ValidationTableProps {
   setFormValidation: (v: any) => void;
   handleOpenPdf: (path: string, uid: string) => void;
   setShowArchiveDialog: (v: boolean) => void;
-  setAlertVisible?: (v: any) => void;
   statuses: Record<string, string>;
-  statusesColors: Record<string, string>;
 }
 
 const ValidationTable: React.FC<ValidationTableProps> = ({
@@ -44,7 +42,6 @@ const ValidationTable: React.FC<ValidationTableProps> = ({
   setFormValidation,
   handleOpenPdf,
   setShowArchiveDialog,
-  setAlertVisible,
   statuses,
 }) => {
   const statusClasses: Record<string, string> = {

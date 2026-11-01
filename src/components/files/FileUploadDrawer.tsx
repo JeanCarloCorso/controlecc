@@ -152,7 +152,7 @@ const FileUploadDrawer: React.FC<FileUploadDrawerProps> = ({
               <FormField
                 control={form.control}
                 name="file"
-                render={({ field: { value, onChange, ...fieldProps } }) => (
+                render={() => (
                   <FormItem>
                     <FormLabel>Arquivo</FormLabel>
                     <FormControl>

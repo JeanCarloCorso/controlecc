@@ -1,16 +1,14 @@
 // pages/dashboard/page.tsx
 "use client";
 import ResponsiveMenu from "@/components/responsive-menu";
-import { LoadingSpinner } from "@/components/ui/loader";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import withAuthorization from "@/components/with-authorization";
-import { collection, query, getDocs, where, database as db } from "@/lib/api-client";
+import { collection, getDocs, database as db } from "@/lib/api-client";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -38,38 +36,22 @@ const DashboardPage = () => {
       if (!session) return;
 
       try {
-        // Fetch all data in parallel with optimized queries
-        const [filesSnapshot, usersSnapshot, pendingFilesSnapshot] =
-          await Promise.all([
-            getDocs(collection(db, "files")),
-            getDocs(collection(db, "users")),
-            getDocs(
-              query(collection(db, "files"), where("status", "==", "pending"))
-            ),
-          ]);
+        const [filesSnapshot, usersSnapshot] = await Promise.all([
+          getDocs(collection(db, "files")),
+          getDocs(collection(db, "users")),
+        ]);
 
-        // Count users without role (filter in JS since Firestore can't query missing fields)
-        const usersWithoutRole = usersSnapshot.docs.filter(
-          (doc) => !doc.data().role
-        ).length;
-
-        // Count all files that are not archived
-        const allFilesNotArchived = filesSnapshot.docs.filter(
-          (doc) => !doc.data().archived
-        ).length;
-
-        // Count pending files that are not archived
-        const pendingNotArchived = pendingFilesSnapshot.docs.filter(
-          (doc) => !doc.data().archived
-        ).length;
+        const files = filesSnapshot.docs.map((document) => document.data());
+        const users = usersSnapshot.docs.map((document) => document.data());
+        const activeFiles = files.filter((file) => file.archived !== true);
 
         setDashboardData({
-          qFiles: allFilesNotArchived,
-          qUsers: usersWithoutRole,
-          qPendingFiles: pendingNotArchived,
-          qArchivedFiles: filesSnapshot.docs.filter(
-            (doc) => doc.data().archived
-          ).length,
+          // A página de usuários lista estudantes; administradores não entram no total.
+          qUsers: users.filter((user) => user.role !== "admin").length,
+          // O total principal acompanha a listagem padrão, que não exibe arquivados.
+          qFiles: activeFiles.length,
+          qPendingFiles: activeFiles.filter((file) => file.status === "pending").length,
+          qArchivedFiles: files.filter((file) => file.archived === true).length,
         });
       } catch (error) {
         console.error("Erro ao obter dados do dashboard:", error);

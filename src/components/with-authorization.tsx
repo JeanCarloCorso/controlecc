@@ -1,13 +1,8 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { ReactNode, useEffect } from "react";
+import { useEffect } from "react";
 import { PageLoader } from "./page-loader";
-
-interface WithAuthorizationProps {
-    children: ReactNode;
-    allowedRoles: string[]; // Roles that are allowed to access the page
-}
 
 const withAuthorization = (Component: any, allowedRoles: string[]) => {
     const WrappedComponent = (props: any) => {

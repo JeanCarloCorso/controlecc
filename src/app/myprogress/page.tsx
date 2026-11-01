@@ -2,12 +2,8 @@
 "use client";
 import ResponsiveMenu from "@/components/responsive-menu";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { collection, query, where, getDocs, database as db } from "@/lib/api-client";
-import { z } from "zod";
-import { useToast } from "@/hooks/use-toast";
-import { LoadingSpinner } from "@/components/ui/loader";
 import {
   Card,
   CardContent,
@@ -21,7 +17,6 @@ import { PageLoader } from "@/components/page-loader";
 const ProgressPage = () => {
   const [myWorkload, setMyWorkload] = useState(0);
   const { data: session, status } = useSession();
-  const { toast } = useToast();
 
   useEffect(() => {
     async function getUserInfo() {

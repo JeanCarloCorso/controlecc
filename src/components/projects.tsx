@@ -14,7 +14,6 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-  DrawerTrigger,
 } from "@/components/ui/drawer"
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -31,7 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from './ui/button';
 import { Edit2Icon, Plus, Trash } from 'lucide-react';
 import { LoadingSpinner } from './ui/loader';
-import { collection, query, getDocs, addDoc, serverTimestamp, doc, setDoc, deleteDoc } from "@/lib/api-client";
+import { collection, query, getDocs, doc, setDoc, deleteDoc } from "@/lib/api-client";
 import { database as db } from '@/lib/api-client';
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -138,7 +137,6 @@ export default function Projects() {
       setLoading(true);
 
       if(editing.status){
-        let projectData: any = values;
         let lastProjects: any = selectedCourse?.projects;
         let data: any = selectedCourse;
         let currentId = editing.id;

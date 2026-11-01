@@ -56,14 +56,6 @@ const statuses: { [key: string]: string } = {
   processing: "Processando",
 };
 
-const statusesColors: any = {
-  pending: "",
-  rejected: "destructive",
-  approved: "outline",
-  archived: "",
-  processing: "secondary",
-};
-
 const ValidationPage = () => {
   const [filesList, setFilesList] = useState<any[]>([]);
   const [currentFile, setCurrentFile] = useState<any>(null);
@@ -108,11 +100,9 @@ const ValidationPage = () => {
       if (statusParam) {
         setFiltersVisible(true);
         if (statusParam === "archived") {
-          handleFilterChange("status", "all");
-          handleFilterChange("includeArchived", true);
           setFilters((prevFilters) => ({
             ...prevFilters,
-            status: "all",
+            status: "archived",
             includeArchived: true,
           }));
         } else {
@@ -214,7 +204,9 @@ const ValidationPage = () => {
       );
     }
 
-    if (filters.status !== "all") {
+    if (filters.status === "archived") {
+      filteredList = filteredList.filter((item: any) => item.archived === true);
+    } else if (filters.status !== "all") {
       filteredList = filteredList.filter(
         (item: any) => item.status === filters.status
       );
@@ -248,7 +240,7 @@ const ValidationPage = () => {
       );
     }
 
-    if (!filters.includeArchived) {
+    if (!filters.includeArchived && filters.status !== "archived") {
       filteredList = filteredList.filter(
         (f: any) => f.archived === false || f.archived === undefined
       );
@@ -628,9 +620,7 @@ const ValidationPage = () => {
             setFormValidation={setFormValidation}
             handleOpenPdf={handleOpenPdf}
             setShowArchiveDialog={setShowArchiveDialog}
-            setAlertVisible={setAlertVisible}
             statuses={statuses}
-            statusesColors={statusesColors}
           />
           <ValidationDrawer
             drawerVisibleView={drawerVisibleView}
@@ -639,7 +629,6 @@ const ValidationPage = () => {
             pdfLoading={pdfLoading}
             formValidation={formValidation}
             setFormValidation={setFormValidation}
-            updateStatus={updateStatus}
             setAlertVisible={setAlertVisible}
             currentFile={currentFile}
           />

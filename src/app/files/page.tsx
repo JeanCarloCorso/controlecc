@@ -1,7 +1,6 @@
 "use client";
 import ResponsiveMenu from "@/components/responsive-menu";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import {
   collection,
@@ -18,9 +17,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { calculatePdfHash, getRandomFileName } from "@/lib/utils";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "@/lib/api-client";
 import { useToast } from "@/hooks/use-toast";
-import { LoadingSpinner } from "@/components/ui/loader";
 import withAuthorization from "@/components/with-authorization";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import FilesTable from "@/components/files/FilesTable";
 import FileUploadDrawer from "@/components/files/FileUploadDrawer";
 import FileViewDrawer from "@/components/files/FileViewDrawer";
@@ -50,18 +47,6 @@ interface FileValidation {
   completionDate: string;
 }
 
-const statuses: any = {
-  pending: "Pendente",
-  rejected: "Rejeitado",
-  approved: "Aprovado",
-  processing: "Processando",
-};
-const statusesColors: any = {
-  pending: "",
-  rejected: "destructive",
-  approved: "outline",
-  processing: "secondary",
-};
 const MAX_PDF_SIZE = 5 * 1024 * 1024;
 
 const FilesPage = () => {
@@ -72,10 +57,7 @@ const FilesPage = () => {
   const [drawerVisibleView, setDrawerVisibleView] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<any>(null);
   const [pdfPath, setPdfPath] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { data: session, status } = useSession();
-  const router = useRouter();
   const { toast } = useToast();
 
   // 1. Define your form.
@@ -90,8 +72,6 @@ const FilesPage = () => {
     mode: "onBlur",
   });
 
-  const fileRef = form.register("file", { required: true });
-
   const uploadFile = async (file: File, fileName: string, userId: any) => {
     const pathFile = `${userId}/${fileName}.pdf`;
 
@@ -99,7 +79,7 @@ const FilesPage = () => {
     const storageRef = ref(storage, pathFile);
 
     try {
-      const snapshot = await uploadBytes(storageRef, file);
+      await uploadBytes(storageRef, file);
       return pathFile;
     } catch (error) {
       console.error("Erro ao upload arquivo:", error);
@@ -306,12 +286,7 @@ const FilesPage = () => {
             loading={loading}
             setDrawerVisibleView={setDrawerVisibleView}
             setPdfPath={setPdfPath}
-            drawerVisibleView={drawerVisibleView}
-            pdfUrl={pdfUrl}
-            pdfLoading={pdfLoading}
             setPdfLoading={setPdfLoading}
-            setPdfUrl={setPdfUrl}
-            setFilesList={setFilesList}
           />
           <FileViewDrawer
             drawerVisibleView={drawerVisibleView}
